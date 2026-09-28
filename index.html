@@ -157,7 +157,7 @@ canvas { display: block; }
 #ammoPips i.off { background: rgba(255,255,255,.14); }
 .hud-row2 { position: absolute; top: calc(44px + env(safe-area-inset-top, 0px)); left: 0; right: 0; height: 26px; font-size: 13px; line-height: 26px; }
 #hudScore { position: absolute; left: 16px; top: 0; }
-#hudWind { position: absolute; left: 0; right: 0; text-align: center; top: 0; }
+#hudWind { position: absolute; left: 25%; right: 25%; text-align: center; top: 0; white-space: nowrap; }
 #hudTime { position: absolute; right: 16px; top: 0; }
 #hudTime.low { color: var(--miss); }
 #hudChallenges { position: absolute; left: 16px; top: calc(76px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px; height: 24px; }
@@ -200,7 +200,7 @@ canvas { display: block; }
 #btnBreath.hold { background: rgba(47,139,214,.5); }
 #btnBreath.strain { border-color: var(--miss); }
 #btnBreath.cool { opacity: .55; border-color: var(--lock); }
-#btnBreath .sub { font-size: 12px; font-weight: 400; color: var(--muted); letter-spacing: 0; white-space: nowrap; display: none; }
+#btnBreath .sub { font-size: 12px; line-height: 1.15; font-weight: 400; color: var(--muted); letter-spacing: 0; text-align: center; max-width: 52px; display: none; }
 #btnBreath.cool .sub { display: block; }
 #btnBreath.cool .main { display: none; }
 #btnBreath.jolt { animation: jolt .15s linear; }
@@ -222,7 +222,7 @@ canvas { display: block; }
 .hint { position: absolute; left: 16px; right: 16px; z-index: 35; touch-action: none; background: var(--panel); border: 1px solid var(--accent); border-radius: 14px; padding: 12px 14px; font-size: 14px; line-height: 1.4; box-sizing: border-box; }
 .hint .tapmore { font-size: 12px; color: var(--muted); margin-top: 6px; }
 /* ballistic table */
-.sheet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 358px; max-width: 100%; max-height: 640px; height: calc(100% - 64px); background: var(--panel); border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; display: flex; flex-direction: column; z-index: 45; pointer-events: auto; }
+.sheet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 358px; max-width: 100%; max-height: 664px; height: calc(100% - 64px); background: var(--panel); border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; display: flex; flex-direction: column; z-index: 45; pointer-events: auto; }
 .sheet h2 { margin: 0; font-size: 20px; font-weight: 600; }
 .sheet .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .sheet .live { font-size: 12px; color: var(--accent); margin: 6px 0; height: 16px; }
@@ -298,6 +298,10 @@ canvas { display: block; }
   #hudChallenges { top: calc(80px + env(safe-area-inset-top, 0px)); }
   .menu-col { padding-top: calc(24px + env(safe-area-inset-top, 0px)); }
   .records { margin-top: 12px; } .menu-btns { margin-top: 10px; gap: 8px; } .btn { height: 48px; }
+}
+@media (max-height: 500px) {   /* landscape phones: the ballistic sheet uses the full height so ~8 rows stay visible */
+  .sheet { height: 100%; max-height: none; border-radius: 0; padding-top: 8px; }
+  .sheet .sub { display: none; } .sheet .live { margin: 4px 0; } .sheet .foot { margin-top: 4px; }
 }
 </style>
 </head>
@@ -1053,7 +1057,7 @@ function recordHit(T) {                       // returns true when a «Реко�
   save.records.hits++;
   if (HIT_MILESTONES.indexOf(save.records.hits) >= 0) { banner(S.hits100(save.records.hits)); sfx.record(); }
   let flash = false;
-  if (T.d > save.records.range) { flash = save.records.range > 0; save.records.range = T.d; if (flash) sess.recordsFlashed.range = 1; }
+  if (T.d > save.records.range) { flash = sess.recBefore.range > 0; save.records.range = T.d; if (flash) sess.recordsFlashed.range = 1; }
   if (T.d > sess.longestHit) sess.longestHit = T.d;
   return flash;
 }
@@ -1185,10 +1189,10 @@ function resolveImpact() {
     queueSound(tI + T.d / V_SOUND, sfx.impactSound, T.kind, T.d); queueSound(tI + T.d / V_SOUND, buzzDelayed, 0, 0);
     /* records: one «Рекорд!» per shot, only once a previous record exists (C12) */
     let recFlash = false;
-    if (!isGold) recFlash = recordHit(T); else { save.records.hits++; if (T.d > save.records.range) { recFlash = save.records.range > 0; save.records.range = T.d; } if (T.d > sess.longestHit) sess.longestHit = T.d; }
+    if (!isGold) recFlash = recordHit(T); else { save.records.hits++; if (T.d > save.records.range) { recFlash = sess.recBefore.range > 0; save.records.range = T.d; } if (T.d > sess.longestHit) sess.longestHit = T.d; }
     if (sess.streak > save.records.streak) {
       const first = !sess.recordsFlashed.streak;
-      if (sess.streak >= 3 && (first || (sess.streak - sess.streakRecordFlashAt) >= 3)) { sess.recordsFlashed.streak = 1; sess.streakRecordFlashAt = sess.streak; recFlash = true; }
+      if (sess.streak >= 3 && sess.recBefore.streak > 0 && (first || (sess.streak - sess.streakRecordFlashAt) >= 3)) { sess.recordsFlashed.streak = 1; sess.streakRecordFlashAt = sess.streak; recFlash = true; }
       save.records.streak = sess.streak;
     }
     if (recFlash) { banner(S.recordBang); sfx.record(); }
