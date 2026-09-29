@@ -51,6 +51,12 @@ canvas { display: block }
 .btn[disabled] { opacity: .45 }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px }
 .overlay { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: var(--dim) }
+#rotateOverlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; box-sizing: border-box; background: var(--bg); text-align: center; touch-action: none }
+#rotateOverlay svg { width: 88px; height: 88px; fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; animation: rotHint 2.4s ease-in-out infinite }
+#rotateOverlay .t { font-size: 20px; font-weight: 600 }
+#rotateOverlay .s { font-size: 14px; color: var(--muted) }
+@keyframes rotHint { 0%, 35% { transform: rotate(0) } 65%, 100% { transform: rotate(90deg) } }
+@media (prefers-reduced-motion: reduce) { #rotateOverlay svg { animation: none; transform: rotate(90deg) } }
 .overlay .card { width: 340px; max-width: calc(100% - 24px); padding: 20px 16px; box-sizing: border-box; max-height: calc(100% - 24px); overflow-y: auto; touch-action: pan-y }
 .overlay h2 { margin: 0 0 12px; font-size: 20px; font-weight: 600 }
 .overlay .rows { display: flex; flex-direction: column; gap: 8px }
@@ -315,6 +321,41 @@ canvas { display: block }
   .menu-col { padding-top: calc(24px + var(--sat)) }
   .records { margin-top: 12px } .menu-btns { margin-top: 10px; gap: 8px } .btn { height: 48px }
 }
+/* -- main menu, phone landscape: title + records + rank on the left, buttons on the right, nothing scrolls -- */
+@media (orientation: landscape) and (max-height: 560px) {
+  .menu-col { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto 1fr; column-gap: 24px; padding: calc(12px + var(--sat)) 32px calc(6px + var(--sab)); align-items: start; justify-items: center; overflow: hidden }
+  .menu-col .title { grid-column: 1; grid-row: 1; font-size: 40px; margin: 0 }
+  .menu-col .subtitle { grid-column: 1; grid-row: 2; margin-top: 0 }
+  .records { grid-column: 1; grid-row: 3; margin-top: 10px; width: 100%; max-width: 340px }
+  .rank-wrap { grid-column: 1; grid-row: 4; margin-top: 8px; width: 100%; max-width: 340px }
+  .menu-btns { grid-column: 2; grid-row: 1 / 5; align-self: center; width: 100%; max-width: 340px; margin-top: 0; gap: 10px }
+  .menu-btns .btn { height: 48px }
+  .footer, .desktop-hint { grid-column: 1 / -1; grid-row: 5; align-self: end; margin-top: 4px }
+}
+/* -- result screen, phone landscape: two columns (left: title/stars/score, right: stats/medals), buttons in one row -- */
+.res-left, .res-right { display: contents }
+@media (orientation: landscape) and (max-height: 560px) {
+  .res-wrap { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 44px minmax(0, 1fr) auto; column-gap: 20px; padding: var(--sat) 24px calc(6px + var(--sab)); overflow: hidden; align-items: stretch }
+  .res-top { grid-column: 1 / -1; height: 44px; padding-right: 56px }
+  .res-left { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0 }
+  .res-right { display: flex; flex-direction: column; justify-content: center; min-height: 0; width: 100%; max-width: 380px; justify-self: center }
+  .res-title { font-size: 24px; margin-top: 0 }
+  .res-line { margin-top: 2px; min-height: 18px; font-size: 14px }
+  .res-banner { height: 22px; font-size: 18px; margin-top: 2px }
+  .res-stars { height: 58px; margin-top: 2px; gap: 10px }
+  .res-star { width: 52px; height: 58px } .res-star .s { font-size: 40px } .res-star .rule { font-size: 11px; height: 13px }
+  .res-fail { margin-top: 2px } .res-fail .dg { margin-top: 4px; padding: 0 }
+  .res-score { font-size: 36px; margin-top: 2px }
+  .res-bonus { margin: 4px 0 0 }
+  .res-stats { margin-top: 0; max-width: none; gap: 8px }
+  .res-ch { margin: 8px 0 0; min-height: 56px; max-width: none }
+  .res-ch .chip { padding: 6px 4px; gap: 2px; line-height: 1.15; font-size: 11px }
+  .res-btns { grid-column: 1 / -1; position: static; max-width: none; flex-direction: row; align-items: center; gap: 10px; padding: 8px 0 0 }
+  .res-btns .btn.primary { flex: 0 0 240px; height: 48px; font-size: 16px }
+  .res-sec { flex: 1; gap: 10px; flex-wrap: nowrap }
+  .res-sec .btn { height: 48px; font-size: 15px }
+  .res-sec .btn.primary { flex: 1 1 auto; height: 48px; font-size: 16px }
+}
 @media (max-height: 500px) {   /* landscape: full-height sheet */
   .sheet { height: 100%; max-height: none; border-radius: 0; padding-top: 8px }
   .sheet .sub { display: none } .sheet .live { margin: 4px 0 } .sheet .foot { margin-top: 4px }
@@ -327,6 +368,13 @@ canvas { display: block }
     <button id="btnMute" data-testid="btn-mute" aria-label="Дыбыс">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path class="on" d="M4 9v6h4l5 4V5L8 9H4z M16 8.5a5 5 0 0 1 0 7 M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M4 9v6h4l5 4V5L8 9H4z M16 9l5 6 M21 9l-5 6"/></svg>
     </button>
+  </div>
+
+  <!-- ==== ROTATE PROMPT (portrait is blocked: the game is landscape-only) ==== -->
+  <div id="rotateOverlay" data-testid="screen-rotate" hidden>
+    <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="6" width="24" height="44" rx="4"/><path d="M8 50a24 24 0 0 0 20 8M56 14a24 24 0 0 0-20-8"/><path d="M28 62l-6-4 6-4M36 2l6 4-6 4"/></svg>
+    <div class="t">Телефонды көлденең бұрыңыз</div>
+    <div class="s">Ойын тек көлденең режимде ойналады</div>
   </div>
 
   <!-- ==== MAIN MENU ==== -->
@@ -459,6 +507,7 @@ canvas { display: block }
   <section id="screenResult" class="screen" data-testid="screen-result" hidden>
     <div class="res-wrap" id="resWrap">
       <div class="res-top"><div class="l" id="resTop"></div><div class="r" id="resBest"></div></div>
+      <div class="res-left">
       <div class="res-title" id="resTitle">Кезең өтілді</div>
       <div class="res-line" id="resLine" hidden></div>
       <div class="res-banner" id="resRecord"></div>
@@ -470,6 +519,8 @@ canvas { display: block }
       <div class="res-fail" id="resFail" hidden><div class="h" id="resFailHits"></div><div class="nm" id="resFailNear"></div><div class="dg" id="resFailDiag"></div></div>
       <div class="res-score" id="resScore">0</div>
       <div class="res-bonus" id="resBonus"></div>
+      </div>
+      <div class="res-right">
       <div class="res-stats" id="resStats">
         <div class="stat"><div class="k">Дәлдік</div><div class="v" id="stAcc"></div><div class="tag" hidden>Рекорд</div></div>
         <div class="stat"><div class="k">Ең ұзақ серия</div><div class="v" id="stStreak"></div><div class="tag" hidden>Рекорд</div></div>
@@ -477,6 +528,7 @@ canvas { display: block }
         <div class="stat"><div class="k">Уақыт</div><div class="v" id="stTime"></div><div class="tag" hidden>Рекорд</div></div>
       </div>
       <div class="res-ch" id="resCh"></div>
+      </div>
       <div class="res-btns">
         <button class="btn primary" id="btnNext" data-testid="btn-next">Келесі кезең</button>
         <div class="res-sec">
@@ -1472,7 +1524,9 @@ function mkCanvas(w, h, dpr) { const c = document.createElement('canvas'); c.wid
 function resize() {
   const app = $('app'), w = app.clientWidth || window.innerWidth, h = app.clientHeight || window.innerHeight;
   const dpr = Math.min(2, window.devicePixelRatio || 1); cacheFontFamily();
-  layout.w = w; layout.h = h; layout.dpr = dpr; layout.landscape = w > h && h < 675;   // short portrait phones keep the one-hand cluster
+  layout.w = w; layout.h = h; layout.dpr = dpr; layout.landscape = w > h;   // landscape-only game: any wider-than-tall viewport gets the two-thumb layout
+  const portrait = h > w; $('rotateOverlay').hidden = !portrait;             // portrait is blocked with the rotate prompt …
+  if (portrait && screen === 'play' && phase !== 'intro') togglePause(true); // … and a running level is paused under it
   if (layout.landscape) { layout.R = 0.44 * Math.min(w, h); layout.cx = w / 2; layout.cy = h / 2; }
   else { layout.R = clamp(Math.min(0.477 * w, (h - 375) / 2), 120, 220); layout.cy = h - 258 - layout.R; layout.cx = w / 2; }
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
@@ -2028,7 +2082,7 @@ function bindInput() {
   down('btnFire', () => { if (waveSkip()) return; if (phase === 'aim' || phase === 'cam') { if (sess.ammo <= 0) { sfx.dryClick(); return; } fireShot(false); } else if (phase === 'flight' && sess.ammo <= 0) sfx.dryClick(); });
   down('btnBreath', () => breathTap()); down('btnZoom', () => cycleZoom()); down('btnTable', () => toggleTable()); down('btnPause', () => togglePause());
   /* menu */
-  click('btnStart', () => { let i = 0; while (i < 12 && save.stars[i] > 0) i++; if (i >= 12) go('levels'); else startLevel(i, { intro: true }); });
+  click('btnStart', () => { lockLandscape(); let i = 0; while (i < 12 && save.stars[i] > 0) i++; if (i >= 12) go('levels'); else startLevel(i, { intro: true }); });
   click('btnLevels', () => go('levels')); click('btnHowto', () => showOverlay('howtoOverlay')); click('btnSettings', () => showOverlay('settingsOverlay'));
   click('btnGear', () => { buildGear(); showOverlay('gearOverlay'); });
   click('settingsClose', () => hideOverlay('settingsOverlay')); click('howtoClose', () => hideOverlay('howtoOverlay')); click('gearClose', () => hideOverlay('gearOverlay'));
@@ -2343,6 +2397,15 @@ function uiTableLive() {
 }
 
 /* -- pause */
+/* Landscape lock: only Android browsers honour it (and only in fullscreen); iOS ignores it, so the rotate prompt above stays the real guard. */
+let lockTried = false;
+function lockLandscape() {
+  if (lockTried || !matchMedia('(pointer: coarse)').matches) return; lockTried = true;   // touch devices only; never fullscreen a desktop
+  try {
+    const el = document.documentElement, fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : Promise.reject();
+    fs.catch(() => {}).then(() => { try { const o = window.screen.orientation; if (o && o.lock) o.lock('landscape').catch(() => {}); } catch (e) {} });   // window.screen: the game's `screen` is the current screen name
+  } catch (e) {}
+}
 function togglePause(force) {
   if (screen !== 'play' || phase === 'intro') return;
   const p = force == null ? !paused : force; if (p === paused) return;
@@ -2576,6 +2639,7 @@ function frame(now) {
   wallNow = now; let dtWall = now - lastWall; lastWall = now; if (!(dtWall >= 0)) dtWall = 0; if (dtWall > 50) dtWall = 50;
   perf.frames++; perf.acc += dtWall; if (perf.acc >= 1000) { perf.fps = Math.round(perf.frames * 1000 / perf.acc); perf.frames = 0; perf.acc = 0; }
   if (document.hidden) return;
+  if (layout.h > layout.w) { if (screen === 'play' && phase !== 'intro') togglePause(true); return; }   // portrait: rotate prompt is up, nothing runs
   if (screen === 'play') {
     if (paused) return;
     updateCam(dtWall);
