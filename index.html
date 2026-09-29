@@ -18,6 +18,7 @@
   --dim:rgba(6,8,11,.82); --dim-light:rgba(6,8,11,.35); --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14); --ink-on-accent:#1a1200; --btn:rgba(255,255,255,.08); --btn-down:rgba(255,255,255,.16);
   --accent-0:rgba(242,181,68,0); --accent-18:rgba(242,181,68,.18); --accent-35:rgba(242,181,68,.35); --accent-70:rgba(242,181,68,.7); --glow-60:rgba(255,210,122,.6); --glow-80:rgba(255,210,122,.8);
   --breath-50:rgba(47,139,214,.5); --preview-ground:#7f9a6a; --shadow:rgba(0,0,0,.7);
+  --coin:#f5c542; --coin-dark:#a8741a; --coin-glow:rgba(245,197,66,.45); --danger:#ff453a; --steel:#b8c6d6; --finish:#f2b544; --finish-2:#ffd27a; --amber:#ffb347;
   --font:"Rubik", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --back: cubic-bezier(.34,1.56,.64,1);
 }
@@ -41,6 +42,15 @@ canvas { display: block }
 #btnMute.muted { color: var(--muted) }
 #btnMute .on { display: block } #btnMute .off { display: none }
 #btnMute.muted .on { display: none } #btnMute.muted .off { display: block }
+/* coin balance («жұлдыз») — one bar for every screen; counts up on earn */
+#coinBar { position: absolute; right: 72px; top: var(--sat); height: 48px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text); background: var(--hud-bg); pointer-events: none; text-shadow: 0 1px 4px var(--shadow) }
+#coinBar.bump { animation: chipPop .29s var(--back) }
+.coin { width: 20px; height: 20px; flex: none; display: block }
+.coin.sm { width: 16px; height: 16px }
+.coinfly { position: absolute; width: 16px; height: 16px; z-index: 70; pointer-events: none; transition: transform .45s cubic-bezier(.33,1,.68,1), opacity .45s; will-change: transform }
+@media (prefers-reduced-motion: reduce) { .coinfly { transition-duration: .15s } }
+.backbtn { position: absolute; left: 8px; top: 4px; width: 48px; height: 48px; border-radius: 12px; font-size: 30px; line-height: 1 }
+.backbtn:active { background: var(--btn-down) }
 
 /* -- generic buttons / cards -- */
 .btn { display: block; width: 320px; max-width: calc(100% - 32px); height: 56px; margin: 0 auto; border-radius: 14px; font-size: 18px; font-weight: 500;
@@ -82,6 +92,10 @@ canvas { display: block }
 .rank-bar { position: absolute; left: 30px; top: 32px; width: 200px; height: 6px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
 #rankFill { height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width .4s cubic-bezier(.33,1,.68,1) }
 #btnGear { position: absolute; right: 0; top: 4px; width: 88px; height: 48px; border-radius: 16px; background: var(--btn); border: 1px solid var(--line); font-size: 13px; font-weight: 500 }
+.menu-shop { margin-top: 10px; width: 320px; max-width: calc(100% - 32px) }
+#btnShop { position: relative; width: 100%; max-width: none; height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px }
+#btnShop .coinbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: var(--accent-2); padding: 3px 8px; border-radius: 10px; background: var(--btn) }
+#btnShop .dot { position: absolute; right: 10px; top: 10px; width: 10px; height: 10px; border-radius: 5px; background: var(--danger); box-shadow: 0 0 0 2px var(--panel) }
 .menu-btns { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; width: 100% }
 .footer { margin-top: 26px; font-size: 12px; color: var(--muted) }
 .desktop-hint { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; padding: 0 16px }
@@ -91,17 +105,70 @@ canvas { display: block }
 .howto-line { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.35; margin: 10px 0 }
 .howto-line canvas { flex: 0 0 24px; width: 24px; height: 24px }
 
-/* -- gear panel -- */
-.gear-sub { font-size: 13px; color: var(--muted); margin: -6px 0 10px }
-.gear-cards { display: flex; gap: 12px; justify-content: center }
-.gear-card { width: 96px; height: 192px; border-radius: 14px; background: var(--panel-2); display: flex; flex-direction: column; align-items: center; padding: 8px 0; box-sizing: border-box; gap: 4px }
-.gear-card canvas { width: 80px; height: 80px; border-radius: 40px; background: var(--preview-ground) }
-.gear-card.locked canvas { opacity: .35 }
-.gear-card .gn { font-size: 13px; font-weight: 500 }
-.gear-card .gs { font-size: 12px; color: var(--muted); height: 14px }
-.gear-card button { width: 84px; height: 48px; border-radius: 10px; background: var(--btn); font-size: 13px; font-weight: 500 }
-.gear-card button.sel { background: var(--accent); color: var(--ink-on-accent) }
-.gear-card button[disabled] { opacity: .4 }
+/* -- shop («Дүкен»): category column left, scrolling item grid right; nothing else scrolls -- */
+.shop-body { position: absolute; top: calc(56px + var(--sat)); bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 168px minmax(0, 1fr); column-gap: 8px; padding: 0 16px calc(8px + var(--sab)); box-sizing: border-box }
+@media (max-width: 700px) { .shop-body { grid-template-columns: 150px minmax(0, 1fr) } }
+.shop-cats { display: flex; flex-direction: column; gap: 4px; padding-top: 4px }
+.cat-btn { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 10px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--muted); text-align: left; white-space: nowrap }
+.cat-btn canvas { width: 24px; height: 24px; flex: none }
+.cat-btn.on { background: var(--accent-18); color: var(--text); box-shadow: inset 3px 0 0 var(--accent) }
+.cat-btn:active { background: var(--btn-down) }
+.shop-grid { overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; padding: 4px 4px 12px 0 }
+.item { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; min-width: 0; transform-style: preserve-3d }
+.item.eq { border-color: var(--accent) }
+.item .head { display: flex; gap: 10px; align-items: flex-start; min-width: 0 }
+.item canvas.ic { width: 56px; height: 56px; flex: none; border-radius: 12px; background: var(--panel-2) }
+.item .nm { font-size: 15px; font-weight: 600; line-height: 1.2 }
+.item .fx { font-size: 12px; color: var(--muted); line-height: 1.25; margin-top: 3px }
+.item .row { display: flex; align-items: center; gap: 8px }
+.item .price { display: flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 500; white-space: nowrap; min-width: 52px }
+.item .price.free { color: var(--muted); font-size: 12px }
+.item .stock { font-size: 12px; color: var(--muted); white-space: nowrap }
+.ibtn { flex: 1; height: 48px; border-radius: 12px; background: var(--btn); font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 8px; min-width: 0 }
+.ibtn:active { background: var(--btn-down) }
+.ibtn.buy { background: var(--accent); color: var(--ink-on-accent) }
+.ibtn.buy:active { background: var(--accent-2) }
+.ibtn.need { opacity: .5; font-size: 13px }
+.ibtn.eq { background: var(--accent-18); color: var(--accent-2); border: 1px solid var(--accent) }
+.ibtn.own { opacity: .6 }
+.item.shake { animation: itemShake .2s linear }
+@keyframes itemShake { 0%,100% { transform: translateX(0) } 20% { transform: translateX(6px) } 40% { transform: translateX(-6px) } 60% { transform: translateX(4px) } 80% { transform: translateX(-3px) } }
+.item.buying { animation: cardFlip .36s ease-in-out, goldFlash .9s ease-out }
+@keyframes cardFlip { 0% { transform: perspective(600px) rotateY(0) } 100% { transform: perspective(600px) rotateY(360deg) } }
+@keyframes goldFlash { 0% { box-shadow: 0 0 0 0 var(--coin-glow); background: var(--panel) } 30% { box-shadow: 0 0 0 10px var(--coin-glow); background: var(--accent-18) } 100% { box-shadow: 0 0 0 0 var(--accent-0); background: var(--panel) } }
+@media (prefers-reduced-motion: reduce) { .item.buying { animation: goldFlash .5s ease-out } }
+.item .stamp { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-10deg) scale(1); padding: 6px 14px; border: 3px solid var(--coin); border-radius: 10px; color: var(--coin); background: var(--dim); font-size: 18px; font-weight: 700; white-space: nowrap; z-index: 2; animation: stampIn .25s var(--back); pointer-events: none }
+@keyframes stampIn { from { transform: translate(-50%, -50%) rotate(-10deg) scale(1.8); opacity: 0 } to { transform: translate(-50%, -50%) rotate(-10deg) scale(1); opacity: 1 } }
+.item .ask { display: flex; gap: 6px }
+.item .ask .ibtn { flex: 1 }
+.shop-empty { grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--muted) }
+
+/* -- loadout («Жабдық» screen): one scrolling column of sections -- */
+.lo-body { position: absolute; top: calc(56px + var(--sat)); bottom: 0; left: 0; right: 0; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; padding: 0 16px calc(12px + var(--sab)); box-sizing: border-box }
+.lo-cap { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px }
+.lo-row { display: flex; gap: 10px; flex-wrap: wrap }
+.lo-card { flex: 1 1 180px; max-width: 260px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px }
+.lo-card.eq { border-color: var(--accent) }
+.lo-card .nm { font-size: 15px; font-weight: 600 }
+.lo-card .sub { font-size: 12px; color: var(--muted) }
+.lo-card .bar { display: grid; grid-template-columns: 74px 1fr 34px; align-items: center; gap: 6px; font-size: 12px; color: var(--muted) }
+.lo-card .bar i { display: block; height: 6px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
+.lo-card .bar i b { display: block; height: 100%; background: var(--accent); border-radius: 3px }
+.lo-card .bar span:last-child { text-align: right; color: var(--text) }
+.lo-card .ibtn { flex: none; margin-top: 2px }
+.chipbtn { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 8px; border-radius: 12px; background: var(--btn); font-size: 14px; font-weight: 500; border: 1px solid transparent }
+.chipbtn canvas { width: 32px; height: 32px; border-radius: 8px }
+.chipbtn.eq { border-color: var(--accent); background: var(--accent-18) }
+.chipbtn.lock { opacity: .45 }
+.lo-list { display: flex; flex-direction: column; gap: 4px }
+.lo-line { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 10px; border-radius: 12px; background: var(--panel); font-size: 14px }
+.lo-line .tick { width: 22px; height: 22px; border-radius: 11px; background: var(--line-strong); color: var(--ink-on-accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex: none }
+.lo-line.on .tick { background: var(--hit) }
+.lo-line .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.lo-line .s { font-size: 12px; color: var(--muted); white-space: nowrap }
+.lo-line.off { opacity: .55 }
+#btnLoShop { position: absolute; right: 16px; top: 4px; height: 48px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--ink-on-accent); font-size: 15px; font-weight: 500 }
+.lc-gear { display: block; margin: 6px auto 0; height: 48px; padding: 0 16px; border-radius: 12px; font-size: 14px; color: var(--accent); background: var(--btn) }
 
 /* -- level select -- */
 .lv-top { position: relative; height: 56px; margin-top: var(--sat); display: flex; align-items: center }
@@ -157,7 +224,7 @@ canvas { display: block }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none }
 #hud { position: absolute; inset: 0; pointer-events: none }
 #hud .ctl { pointer-events: auto; touch-action: none }
-.hud-row1 { position: absolute; top: var(--sat); left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 68px 0 16px; box-sizing: border-box }
+.hud-row1 { position: absolute; top: var(--sat); left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 168px 0 16px; box-sizing: border-box }
 #hudLevel { min-width: 0; height: 44px; line-height: 44px; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 #hudLevel .rec { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 8px }
 #hudLevel .rec.gold { color: var(--gold) }
@@ -222,6 +289,18 @@ canvas { display: block }
 @keyframes jolt { 0%,100% { margin-left: 0 } 25% { margin-left: 4px } 75% { margin-left: -4px } }
 #btnZoom, #btnTable, #btnPause { width: 56px; height: 56px; font-size: 14px }
 #btnZoom { font-size: 16px }
+#btnHip, #btnDialUp, #btnDialDown { width: 48px; height: 48px; font-size: 11px }
+#btnHip.on { background: var(--accent); color: var(--ink-on-accent); border-color: transparent }
+#btnDialUp, #btnDialDown { font-size: 18px }
+#btnFire.hip { background: var(--panel-2); color: var(--muted); font-size: 12px; line-height: 1.15; box-shadow: none }
+#btnFire.hip .sweep { display: none }
+#btnFire { box-shadow: 0 0 0 3px var(--finish), 0 4px 16px var(--shadow) }   /* finish ring (cosmetic) */
+#app.finish-steel { --finish:#b8c6d6; --finish-2:#e3edf7; --tracer:#e6efff }
+#app.finish-gold { --finish:#ffd24a; --finish-2:#fff0b0; --tracer:#ffe27a }
+#app.finish-steel #hudStreak, #app.finish-gold #hudStreak { background: var(--finish); }
+#hudTurret { position: absolute; left: 50%; transform: translateX(-50%); top: calc(76px + var(--sat)); height: 26px; line-height: 26px; padding: 0 12px; border-radius: 13px; background: var(--hud-bg); font-size: 13px; font-weight: 500; white-space: nowrap; border: 1px solid var(--line) }
+#hudTurret .v { color: var(--accent-2) }
+#btnPauseAmmo, #btnSecond { display: flex; align-items: center; justify-content: center; gap: 8px }
 #btnPause { flex-direction: row; gap: 4px }
 .pbar { width: 4px; height: 16px; background: currentColor; border-radius: 1px; display: block }   /* pause icon (Rubik lacks ǁ) */
 #btnBreath .ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none }
@@ -282,6 +361,11 @@ canvas { display: block }
 .res-score { font-size: 44px; font-weight: 700; margin-top: 8px; line-height: 1 }
 .res-bonus { font-size: 12px; color: var(--muted); margin: 6px 0 10px; height: 16px; opacity: 0; transition: opacity .3s }
 .res-bonus.show { opacity: 1 }
+.res-coins { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; font-weight: 600; color: var(--coin); margin-top: 6px; min-height: 20px; opacity: 0; transition: opacity .3s }
+.res-coins.show { opacity: 1 }
+.res-coins .bd { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px }
+.res-teaser { margin-top: 6px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--btn); border: 1px solid var(--accent); color: var(--accent-2); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; animation: chipIn .25s var(--back) }
+.res-teaser:active { background: var(--btn-down) }
 /* three auto margins share the slack */
 .res-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 358px; margin-top: auto; flex-shrink: 0 }
 .stat { background: var(--panel); border-radius: 12px; padding: 10px 12px; box-sizing: border-box; height: 52px; opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; position: relative }
@@ -323,14 +407,15 @@ canvas { display: block }
 }
 /* -- main menu, phone landscape: title + records + rank on the left, buttons on the right, nothing scrolls -- */
 @media (orientation: landscape) and (max-height: 560px) {
-  .menu-col { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto 1fr; column-gap: 24px; padding: calc(12px + var(--sat)) 32px calc(6px + var(--sab)); align-items: start; justify-items: center; overflow: hidden }
+  .menu-col { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto auto 1fr; column-gap: 24px; padding: calc(12px + var(--sat)) 32px calc(6px + var(--sab)); align-items: start; justify-items: center; overflow: hidden }
   .menu-col .title { grid-column: 1; grid-row: 1; font-size: 40px; margin: 0 }
   .menu-col .subtitle { grid-column: 1; grid-row: 2; margin-top: 0 }
-  .records { grid-column: 1; grid-row: 3; margin-top: 10px; width: 100%; max-width: 340px }
-  .rank-wrap { grid-column: 1; grid-row: 4; margin-top: 8px; width: 100%; max-width: 340px }
-  .menu-btns { grid-column: 2; grid-row: 1 / 5; align-self: center; width: 100%; max-width: 340px; margin-top: 0; gap: 10px }
+  .records { grid-column: 1; grid-row: 3; margin-top: 8px; width: 100%; max-width: 340px; padding: 6px 14px 8px }
+  .rank-wrap { grid-column: 1; grid-row: 4; margin-top: 6px; width: 100%; max-width: 340px }
+  .menu-shop { grid-column: 1; grid-row: 5; margin-top: 6px; width: 100%; max-width: 340px }
+  .menu-btns { grid-column: 2; grid-row: 1 / 6; align-self: center; width: 100%; max-width: 340px; margin-top: 0; gap: 10px }
   .menu-btns .btn { height: 48px }
-  .footer, .desktop-hint { grid-column: 1 / -1; grid-row: 5; align-self: end; margin-top: 4px }
+  .footer, .desktop-hint { grid-column: 1 / -1; grid-row: 6; align-self: end; margin-top: 4px }
 }
 /* -- result screen, phone landscape: two columns (left: title/stars/score, right: stats/medals), buttons in one row -- */
 .res-left, .res-right { display: contents }
@@ -347,6 +432,8 @@ canvas { display: block }
   .res-fail { margin-top: 2px } .res-fail .dg { margin-top: 4px; padding: 0 }
   .res-score { font-size: 36px; margin-top: 2px }
   .res-bonus { margin: 4px 0 0 }
+  .res-coins { margin-top: 2px; font-size: 14px; min-height: 18px } .res-coins .bd { max-width: 200px }
+  .res-teaser { margin-top: 4px; height: 34px; font-size: 12px }
   .res-stats { margin-top: 0; max-width: none; gap: 8px }
   .res-ch { margin: 8px 0 0; min-height: 56px; max-width: none }
   .res-ch .chip { padding: 6px 4px; gap: 2px; line-height: 1.15; font-size: 11px }
@@ -358,13 +445,18 @@ canvas { display: block }
 }
 @media (max-height: 500px) {   /* landscape: full-height sheet */
   .sheet { height: 100%; max-height: none; border-radius: 0; padding-top: 8px }
-  .sheet .sub { display: none } .sheet .live { margin: 4px 0 } .sheet .foot { margin-top: 4px }
+  .sheet .sub { font-size: 11px } .sheet .live { margin: 4px 0 } .sheet .foot { margin-top: 4px }
 }
 </style>
 </head>
 <body>
 <div id="app">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <!-- coin «жұлдыз»: gold disc with a star cut-out (never the plain ★ glyph) -->
+    <symbol id="coinSym" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="var(--coin-dark)"/><circle cx="12" cy="11" r="10" fill="var(--coin)"/><circle cx="12" cy="11" r="7.6" fill="none" stroke="var(--coin-dark)" stroke-width="1.2" opacity=".55"/><path d="M12 5.2l1.7 3.6 3.9.5-2.9 2.7.8 3.9L12 14l-3.5 1.9.8-3.9-2.9-2.7 3.9-.5z" fill="var(--coin-dark)"/><path d="M8.2 6.4a7 7 0 0 1 3.4-1.6" fill="none" stroke="#fff6cc" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></symbol>
+  </defs></svg>
   <div id="topbar">
+    <div id="coinBar" data-testid="hud-coins"><svg class="coin"><use href="#coinSym"/></svg><span id="coinVal" class="num">0</span></div>
     <button id="btnMute" data-testid="btn-mute" aria-label="Дыбыс">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path class="on" d="M4 9v6h4l5 4V5L8 9H4z M16 8.5a5 5 0 0 1 0 7 M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M4 9v6h4l5 4V5L8 9H4z M16 9l5 6 M21 9l-5 6"/></svg>
     </button>
@@ -394,6 +486,9 @@ canvas { display: block }
         <div id="rankLine">Үйренуші: 0/9 ★</div>
         <div class="rank-bar"><div id="rankFill"></div></div>
         <button id="btnGear">Жабдық ›</button>
+      </div>
+      <div class="menu-shop">
+        <button class="btn" id="btnShop" data-testid="btn-shop">Дүкен <span class="coinbadge"><svg class="coin sm"><use href="#coinSym"/></svg><span id="menuCoins" class="num">0</span></span><i class="dot" id="shopDot" hidden></i></button>
       </div>
       <div class="menu-btns">
         <button class="btn primary" id="btnStart" data-testid="btn-start">Бастау</button>
@@ -430,6 +525,7 @@ canvas { display: block }
         <div id="lcChallenges"></div>
         <div class="best" id="lcBest"></div>
         <button class="btn primary" id="btnLevelStart" data-testid="btn-level-start">Бастау</button>
+        <button class="lc-gear" id="lcGear" data-testid="btn-level-loadout">Жабдық ›</button>
       </div>
     </div>
     <div id="dailyCardOverlay" class="overlay" hidden>
@@ -461,12 +557,16 @@ canvas { display: block }
       </div>
       <div id="hudChallenges" data-testid="hud-challenges"></div>
       <div id="hudStreak" data-testid="hud-streak" hidden>Серия ×2</div>
+      <div id="hudTurret" data-testid="hud-turret" hidden>Турель <span class="v num">0,0</span> мил</div>
       <div id="hudRange" data-testid="hud-range">— м</div>
       <div id="hudRangeCap"></div>
       <div id="flightLabel" hidden></div>
       <div id="flightBar" hidden><div id="flightFill"></div></div>
       <div id="feedback"></div>
       <button class="rbtn ctl" id="btnTable" data-testid="btn-table" aria-label="Баллистика кестесі">КЕСТЕ</button>
+      <button class="rbtn ctl" id="btnHip" data-testid="btn-hip" aria-label="Кең көрініс">КӨРІНІС</button>
+      <button class="rbtn ctl" id="btnDialUp" data-testid="btn-dial-up" aria-label="Турель жоғары" hidden>▲</button>
+      <button class="rbtn ctl" id="btnDialDown" data-testid="btn-dial-down" aria-label="Турель төмен" hidden>▼</button>
       <button class="rbtn ctl" id="btnZoom" data-testid="btn-zoom" aria-label="Масштаб">8×</button>
       <button class="rbtn ctl" id="btnPause" data-testid="btn-pause" aria-label="Үзіліс"><span class="pbar"></span><span class="pbar"></span></button>
       <button class="rbtn ctl" id="btnBreath" data-testid="btn-breath" aria-label="Демді ұстау"><span class="main">ДЕМ</span><span class="sub">Дем алуда…</span></button>
@@ -484,7 +584,7 @@ canvas { display: block }
       <div class="bg" id="tableBg"></div>
       <div class="sheet">
         <h2>Баллистика кестесі</h2>
-        <div class="sub">СВД · 7,62 мм · V₀ 700 м/с · Нөл: 100 м</div>
+        <div class="sub" id="tableSub" data-testid="table-sub">СВД (7,62) · V₀ 700 м/с · Нөл: 100 м</div>
         <div class="live" id="tableLive">Нысана жоқ</div>
         <div class="thead"><div>Қашықтық, м</div><div>Ұшу, с</div><div>Түсу, мил</div></div>
         <div class="tbody" id="tableBody"></div>
@@ -496,6 +596,7 @@ canvas { display: block }
       <div class="pause-col">
         <h2>Үзіліс</h2>
         <button class="btn primary" id="btnResume" data-testid="btn-resume">Жалғастыру</button>
+        <button class="btn" id="btnPauseAmmo" data-testid="btn-pause-ammo" hidden>+3 оқ (қорда 1)</button>
         <button class="btn" id="btnPauseRetry" data-testid="btn-pause-retry">Қайта ойнау</button>
         <button class="btn" id="btnPauseMute" data-testid="btn-pause-mute">Дыбыс: қосулы</button>
         <button class="btn" id="btnPauseMenu" data-testid="btn-pause-menu">Басты мәзір</button>
@@ -519,6 +620,8 @@ canvas { display: block }
       <div class="res-fail" id="resFail" hidden><div class="h" id="resFailHits"></div><div class="nm" id="resFailNear"></div><div class="dg" id="resFailDiag"></div></div>
       <div class="res-score" id="resScore">0</div>
       <div class="res-bonus" id="resBonus"></div>
+      <div class="res-coins" id="resCoins" data-testid="res-coins"><svg class="coin"><use href="#coinSym"/></svg><span id="resCoinsN" class="num"></span><span class="bd" id="resCoinsBd"></span></div>
+      <button class="res-teaser" id="resTeaser" data-testid="res-teaser" hidden></button>
       </div>
       <div class="res-right">
       <div class="res-stats" id="resStats">
@@ -531,6 +634,7 @@ canvas { display: block }
       </div>
       <div class="res-btns">
         <button class="btn primary" id="btnNext" data-testid="btn-next">Келесі кезең</button>
+        <button class="btn primary" id="btnSecond" data-testid="btn-second" hidden>Жалғастыру (+3 оқ)</button>
         <div class="res-sec">
           <button class="btn" id="btnRetry" data-testid="btn-retry">Қайта ойнау</button>
           <button class="btn" id="btnResLevels" data-testid="btn-levels">Кезеңдер</button>
@@ -538,7 +642,28 @@ canvas { display: block }
         </div>
       </div>
     </div>
-    <div id="unlockBanner" class="unlock-banner" hidden></div>
+  </section>
+
+  <!-- ==== SHOP («Дүкен») ==== -->
+  <section id="screenShop" class="screen" data-testid="screen-shop" hidden>
+    <div class="lv-top">
+      <button class="backbtn" id="btnShopBack" data-testid="btn-shop-back" aria-label="Артқа">‹</button>
+      <div class="lv-title">Дүкен</div>
+    </div>
+    <div class="shop-body">
+      <div class="shop-cats" id="shopCats"></div>
+      <div class="shop-grid" id="shopGrid" data-testid="shop-grid"></div>
+    </div>
+  </section>
+
+  <!-- ==== LOADOUT («Жабдық») ==== -->
+  <section id="screenLoadout" class="screen" data-testid="screen-loadout" hidden>
+    <div class="lv-top">
+      <button class="backbtn" id="btnLoBack" data-testid="btn-loadout-back" aria-label="Артқа">‹</button>
+      <div class="lv-title">Жабдық</div>
+      <button id="btnLoShop" data-testid="btn-loadout-shop">Дүкенге ›</button>
+    </div>
+    <div class="lo-body" id="loBody"></div>
   </section>
 
   <div id="settingsOverlay" class="overlay" hidden>
@@ -560,15 +685,6 @@ canvas { display: block }
       <button class="close-btn" id="howtoClose">Жабу</button>
     </div>
   </div>
-  <div id="gearOverlay" class="overlay" hidden>
-    <div class="card">
-      <h2>Жабдық</h2>
-      <div class="gear-sub">Көздеуіш</div>
-      <div class="gear-cards" id="gearCards"></div>
-      <button class="close-btn" id="gearClose">Жабу</button>
-    </div>
-  </div>
-
   <div id="rankupOverlay" class="overlay" hidden>
     <div class="card rank-card">
       <div class="h">Жаңа атақ!</div>
@@ -584,23 +700,60 @@ canvas { display: block }
 /* ҚЫРАН КӨЗ — mobile 2D sniper, one file, procedural art. Sections 1–11 below. Unit: mil (1 m at 1000 m); az > 0 right, el > 0 up. */
 
 /* ==== 1. CONSTANTS ==== */
-const VERSION = '1.0.0';
-const V0 = 700, K_DRAG = 0, G = 9.81, Z0 = 100, K_WIND = 0.4;   // CONTRACT §9.1 (no drag; code path kept)
+const VERSION = '1.1.0';
+const K_DRAG = 0, G = 9.81, Z0 = 100, K_WIND = 0.4;   // CONTRACT §9.1 (no drag; code path kept); V0 lives in RIFLE
 const H_EYE = 1.5, S_MAX = 1500, DISP = 0.1, V_SOUND = 340;
-const BOLT = 0.9, LOCK_AFTER_IMPACT = 0.15;   // s
+const LOCK_AFTER_IMPACT = 0.15;   // s (bolt time lives in RIFLE)
 const SWAY_A = [0.5, 0.65, 0.8];   // peak mil by level group
-const BREATH = { ramp: 0.4, sweet: 3.0, strain: 4.0, held: 0.15, strainTo: 1.6, gasp: 1.3, recover: 1.0, cooldown: 2.5 };
-const BASE_PPM = { 4: 6.5, 8: 13, 12: 19.5 };   // px per mil at R = 186
+const BREATH = { ramp: 0.4, sweet: 3.0, strain: 4.0, held: 0.15, strainTo: 1.6, gasp: 1.3, recover: 1.0, cooldown: 2.5 };   // sweet/strain/cooldown re-set by applyLoadout()
+const PPM_PER_X = 1.625, BASE_PPM = { 4: 6.5, 8: 13, 12: 19.5 };   // px per mil at R = 186 (BASE_PPM: the briefing zooms used by the fit rule)
 const R_REF = 186;
 const STRIP_PPM = 20, STRIP_AZ = 70, STRIP_EL_TOP = 12, STRIP_EL_BOT = -35; // background strip in mil space
 const SENS = [0.6, 1.0, 1.4];
-const RANK_THRESH = [0, 9, 20, 32];   // stars needed for rank i
+const RANK_THRESH = [0, 120, 350, 700];   // lifetime coins («жұлдыз») needed for rank i (SHOP-SPEC §1)
 const RANK_NAMES = ['Үйренуші', 'Мерген', 'Сұңқар', 'Қыран Көз'];
-const RETICLE_STARS = [0, 12, 24];
-const RETICLE_NAMES = ['Классикалық', 'Жіңішке', 'Жасыл нүкте'];
 const MONTHS = ['қаңтар', 'ақпан', 'наурыз', 'сәуір', 'мамыр', 'маусым', 'шілде', 'тамыз', 'қыркүйек', 'қазан', 'қараша', 'желтоқсан'];
 const HIT_MILESTONES = [50, 100, 250, 500, 1000, 2500];
-const SAVE_KEY = 'qyranKoz.v1';
+const SAVE_KEY = 'qyranKoz.v2', SAVE_KEY_V1 = 'qyranKoz.v1';
+const HIP_FOV = 120, HIP_MS = 200, DIAL_STEP = 0.5, DIAL_MAX = 10, DIAL_MAX_X12 = 8;   // hip view ±60 mil; turret 0–10 mil (8 at ×12)
+
+/* Equipment in effect (SHOP-SPEC §2.1–2.2): every ballistics function reads these, never the catalogue. */
+const RIFLE = { id: 'rifle_svd', name: 'СВД (7,62)', v0: 700, kWind: 1, bolt: 0.9, recoil: 1, sway: 1, ammoMod: 0 };
+const SCOPE = { id: 'scope_std', name: 'Стандарт', zooms: [4, 8, 12], turret: false, windTick: false };
+const GEAR = { bipod: false, breath: false, lrf: false, anemo: false, tracer: false };
+const COS = { finish: 'finish_default', reticle: 0, palette: 'pal_default' };   // reticle: style index for the bake
+
+/* Shop catalogue («Дүкен»). cat: rifle | scope | gear | use | cos; sub for cosmetics: finish | ret | pal. */
+const ITEMS = [
+  { id: 'rifle_svd', cat: 'rifle', name: 'СВД (7,62)', price: 0, fx: 'Сенімді бастау: әр 100 м-ге 1 мил', v0: 700, kWind: 1, bolt: 0.9, recoil: 1, sway: 1, ammoMod: 0 },
+  { id: 'rifle_338', cat: 'rifle', name: 'Беркут .338', price: 250, fx: 'Оқ 900 м/с: түсуі 40 % аз, затворы баяу', v0: 900, kWind: 0.85, bolt: 1.2, recoil: 1.4, sway: 1.1, ammoMod: 0 },
+  { id: 'rifle_50', cat: 'rifle', name: 'Барыс .50', price: 500, fx: 'Ауыр оқ: жел 40 % аз ығыстырады, тепкісі күшті', v0: 850, kWind: 0.6, bolt: 1.6, recoil: 2, sway: 1.15, ammoMod: -1 },
+  { id: 'rifle_auto', cat: 'rifle', name: 'Жүйрік (жартылай автомат)', price: 350, fx: 'Жылдам екінші оқ, бірақ тербелісі көп', v0: 800, kWind: 1, bolt: 0.45, recoil: 0.8, sway: 1.3, ammoMod: 1 },
+  { id: 'scope_std', cat: 'scope', name: 'Стандарт', price: 0, fx: '×4 / ×8 / ×12', zooms: [4, 8, 12] },
+  { id: 'scope_far', cat: 'scope', name: 'Қыран ×20', price: 200, fx: '×6 / ×12 / ×20: алыс тақталар үлкен көрінеді; жылдам құстарға тар', zooms: [6, 12, 20] },
+  { id: 'scope_turret', cat: 'scope', name: 'Турель', price: 300, fx: 'Қашықтықты бұра (0,5 мил қадам) — ортасына көзде', zooms: [4, 8, 12], turret: true },
+  { id: 'scope_wind', cat: 'scope', name: 'Жел торабы', price: 150, fx: 'Желге түзетуді торап көрсетеді', zooms: [4, 8, 12], windTick: true },
+  { id: 'gear_bipod', cat: 'gear', name: 'Бипод', price: 120, fx: 'Тербеліс 40 % аз (×0,6)' },
+  { id: 'gear_breath', cat: 'gear', name: 'Дем жаттығуы', price: 100, fx: 'Дем ұстау 3 → 5 с, демалу 2,5 → 1,5 с' },
+  { id: 'gear_lrf', cat: 'gear', name: 'Лазерлік дальномер', price: 80, fx: 'Әр көрінген нысананың қашықтығы жазылады' },
+  { id: 'gear_anemo', cat: 'gear', name: 'Анемометр', price: 90, fx: 'Жел 0,1 м/с дәлдікпен, екпіні де көрінеді' },
+  { id: 'gear_tracer', cat: 'gear', name: 'Трассер оқтар', price: 60, fx: 'Жарық трассер, тиген жер 3 с көрінеді' },
+  { id: 'use_ammo', cat: 'use', name: '+3 оқ', price: 15, fx: 'Үзілістен немесе «Оқ таусылды» экранынан +3 оқ, кезеңге 1 рет' },
+  { id: 'use_second', cat: 'use', name: 'Екінші мүмкіндік', price: 30, fx: 'Оқ таусылғанда +3 оқ: ұпай мен серия сақталады' },
+  { id: 'finish_default', cat: 'cos', sub: 'finish', name: 'Дала', price: 0, fx: 'Әдепкі түс', col: '#f2b544' },
+  { id: 'finish_steel', cat: 'cos', sub: 'finish', name: 'Қара болат', price: 60, fx: 'Ату түймесі мен трассер — болат көк', col: '#b8c6d6' },
+  { id: 'finish_gold', cat: 'cos', sub: 'finish', name: 'Алтын', price: 150, fx: 'Ату түймесі мен трассер — алтын', col: '#ffd24a' },
+  { id: 'ret_classic', cat: 'cos', sub: 'ret', name: 'Классикалық', price: 0, fx: 'Қалың қара сызық, ақ жиек', style: 0 },
+  { id: 'ret_thin', cat: 'cos', sub: 'ret', name: 'Жіңішке', price: 50, fx: 'Жіңішке сызық, нысананы жаппайды', style: 1 },
+  { id: 'ret_green', cat: 'cos', sub: 'ret', name: 'Жасыл нүкте', price: 50, fx: 'Ортасында жасыл нүкте мен сақина', style: 2 },
+  { id: 'ret_red', cat: 'cos', sub: 'ret', name: 'Қызыл', price: 50, fx: 'Қызыл жіңішке сызық, қызыл нүкте', style: 3 },
+  { id: 'pal_default', cat: 'cos', sub: 'pal', name: 'Кезең бойынша', price: 0, fx: 'Әр кезеңнің өз ауа райы' },
+  { id: 'pal_sunset', cat: 'cos', sub: 'pal', name: 'Күн батысы', price: 80, fx: 'Кез келген кезеңде батқан күн', pal: 'ymyrt' },
+  { id: 'pal_night', cat: 'cos', sub: 'pal', name: 'Түн', price: 120, fx: 'Қараңғы аспан, жарық трассер', pal: 'tun' }
+];
+const ITEM_BY_ID = {}; ITEMS.forEach((it) => { ITEM_BY_ID[it.id] = it; });
+const SHOP_CATS = [['rifle', 'Мылтықтар'], ['scope', 'Прицелдер'], ['gear', 'Жабдық'], ['use', 'Бір реттік'], ['cos', 'Әшекей']];
+const DEFAULT_OWNED = ['rifle_svd', 'scope_std', 'finish_default', 'ret_classic', 'pal_default'];
 
 /* Strings — all player-facing text is Kazakh. */
 const S = {
@@ -621,8 +774,16 @@ const S = {
   diagLow: 'Мүлттердің көбі төмен кетті — жоғарырақ көзде', diagHigh: 'Мүлттердің көбі жоғары кетті — төменірек көзде',
   diagLeft: 'Мүлттердің көбі солға кетті — оңға қарай көзде', diagRight: 'Мүлттердің көбі оңға кетті — солға қарай көзде',
   diagBehind: 'Қозғалатын нысанадан артта қалдың — көбірек алдын ала ат', diagAhead: 'Нысанадан озып кеттің — азырақ алдын ала ат',
-  starsCollected: (n) => `${n} ★ жиналды`, topRank: 'Ең жоғары атақ', newReticle: 'Жаңа көздеуіш',
-  needStars: (n) => `${n} ★ керек`, selected: 'Таңдалды', select: 'Таңдау',
+  coinsCollected: (n) => `${fmt(n)} жұлдыз жиналды`, topRank: 'Ең жоғары атақ',
+  /* economy & shop (SHOP-SPEC) */
+  coin: 'жұлдыз', plusCoins: (n) => `+${fmt(n)} жұлдыз`, balance: 'Баланс', shop: 'Дүкен', loadout: 'Жабдық', toShop: 'Дүкенге ›',
+  buy: 'Сатып алу', buyN: (n) => `Сатып алу (×${n})`, need: (n) => `Тағы ${fmt(n)} керек`, apply: 'Қолдану', inUse: 'Қолданылуда', ownedP: 'Иелікте', stock: (n) => `Қорда: ${n}`,
+  bought: 'Сатып алындың!', equipNow: 'Бірден қолдану', later: 'Кейін', newInShop: (nm, p) => `Дүкенде жаңа зат: ${nm} (${p})`, free: 'Бастапқы',
+  hip: 'КӨРІНІС', enterScope: 'Прицелге кір', turret: 'Турель', gustWarn: 'Екпін!', dialClamp: '×12: ең көбі 8 мил',
+  plusAmmo: (n) => `+3 оқ (қорда ${n})`, second: 'Жалғастыру (+3 оқ)', cUsed: 'Қолданылды', rifleBars: ['Жылдамдық', 'Затвор', 'Тепкі'],
+  loSec: { rifle: 'Мылтық', scope: 'Прицел', cos: 'Әшекей', gear: 'Жабдық', use: 'Бір реттік' }, notOwned: 'Иелікте емес', zoomsOf: (z) => z.map((x) => '×' + x).join(' / '),
+  cc: { hit: 'тигізу', bull: 'дәл ортасы', move: 'қозғалыс', far: 'алыс', gold: 'алтын', clear: 'кезең', first: 'алғашқы өту', three: '3 ★', medal: 'медаль', wave: 'толқын', daily: 'күн тапсырмасы' },
+  hintOther: 'Кестеге қара: бұл мылтықтың түсуі басқа.',
   endless: 'Шексіз', daily: 'Күн тапсырмасы', tomorrow: 'Ертең жаңа тапсырма', attempts: 'Әрекет', todayBest: 'Бүгінгі үздік', notPlayed: 'Әлі ойналған жоқ',
   lockPrev: 'Алдыңғы кезеңді өт', lockAfter: (n) => `${n}-кезеңнен кейін ашылады`, newDaily: 'Жаңа: Күн тапсырмасы', newEndless: 'Жаңа: Шексіз',
 medal: 'Медаль', starRules: '★ Барлық нысана · ★★ ≤ {2} мүлт · ★★★ ≤ {3} мүлт',
@@ -630,16 +791,18 @@ medal: 'Медаль', starRules: '★ Барлық нысана · ★★ ≤ {
   sens: ['Сезімталдық: төмен', 'Сезімталдық: орташа', 'Сезімталдық: жоғары'], hand: ['Қол: оң', 'Қол: сол'],
   howto: ['Саусақпен сүйреп көзде.', 'Қашықтық артқан сайын оқ төмен түседі — әр 100 м-ге 1 мил жоғары көзде.',
     'Қозғалатын нысананың алдын ала ат: әр 1 м/с-қа 1,4 мил.', '«Дем» қолды 3 секунд тұрақтандырады.'],
+  /* hints read the equipped rifle (SHOP-SPEC §2.1): the L1 holdover text is only true for the SVD */
   hints: {
-    hold: 'Бұл нысана 200 м-де. Мылтық 100 м-ге нөлделген — одан әрі оқ төмен түседі. Әр 100 м-ге 1 мил жоғары көзде.',
-    table: 'Кестені аш (КЕСТЕ): әр қашықтыққа қанша мил жоғары көздеу керегі жазылған. 300 м → 2 мил.',
-    lead: 'Нысана қозғалып тұр. Оқ ұшып жеткенше ол алға кетеді — алдын ала ат: әр 1 м/с жылдамдыққа 1,4 мил алға. Рельс шетінде ол бір сәт тоқтайды.',
-    bird: 'Құс жылдам — 5 м/с болса, 7 мил алға көзде. Ол толқындап ұшады: тегіс сәтін күт немесе биіктігін де есепте.',
-    wind: 'Жел солдан 3 м/с: оқты оңға ығыстырады. Әр 1 м/с желге 0,6 мил қарсы жаққа көзде. Көрсеткіш экранның жоғарғы жағында.'
+    hold: () => RIFLE.id === 'rifle_svd' ? 'Бұл нысана 200 м-де. Мылтық 100 м-ге нөлделген — одан әрі оқ төмен түседі. Әр 100 м-ге 1 мил жоғары көзде.' : `Бұл нысана 200 м-де. ${S.hintOther}`,
+    table: () => `Кестені аш (КЕСТЕ): әр қашықтыққа қанша мил жоғары көздеу керегі жазылған. 300 м → ${fmtMil(dropMils(300), 1)} мил.`,
+    lead: () => `Нысана қозғалып тұр. Оқ ұшып жеткенше ол алға кетеді — алдын ала ат: әр 1 м/с жылдамдыққа ${fmtMil(leadMils(1), 1)} мил алға. Рельс шетінде ол бір сәт тоқтайды.`,
+    bird: () => `Құс жылдам — 5 м/с болса, ${fmtMil(leadMils(5), 0)} мил алға көзде. Ол толқындап ұшады: тегіс сәтін күт немесе биіктігін де есепте.`,
+    wind: () => `Жел солдан 3 м/с: оқты оңға ығыстырады. Әр 1 м/с желге ${fmtMil(windMils(300, 1), 1)} мил қарсы жаққа көзде. Көрсеткіш экранның жоғарғы жағында.`
   },
   tableLead: (v) => `Алдын ала ату: әр 1 м/с жылдамдыққа ${v} мил (қозғалыс бағытына қарай алға)`,
   tableWind: (v) => `Жел: әр 1 м/с желге ${v} мил (желге қарсы)`,
-  tableEx: 'Мысал: 400 м, 2 м/с оңға, жел 3 м/с солдан → 3 мил жоғары, 2,9 мил оңға, 1,7 мил солға',
+  tableEx: () => `Мысал: 400 м, 2 м/с оңға, жел 3 м/с солдан → ${fmtMil(dropMils(400), 1)} мил жоғары, ${fmtMil(leadMils(2), 1)} мил оңға, ${fmtMil(windMils(400, 3), 1)} мил солға`,
+  tableSub: () => `${RIFLE.name} · V₀ ${RIFLE.v0} м/с · Нөл: ${Z0} м`,
   tableNow: 'Қазір', noTarget: 'Нысана жоқ'
 };
 const CHALLENGE_STR = {
@@ -664,16 +827,31 @@ function fmtTime(sec) { sec = Math.max(0, Math.round(sec)); return Math.floor(se
 function fmtPct(v) { return Math.round(v) + ' %'; }
 
 /* ==== 2. MATH / BALLISTICS ==== */
-const tof = (d) => K_DRAG ? (Math.exp(K_DRAG * d) - 1) / (K_DRAG * V0) : d / V0;   // s
-const rangeAt = (tau) => K_DRAG ? Math.log(1 + K_DRAG * V0 * tau) / K_DRAG : V0 * tau;   // inverse of tof
+/* All of these read the equipped rifle (RIFLE.v0, RIFLE.kWind); zeroMils is re-derived by applyLoadout() on every equip. */
+const tof = (d) => K_DRAG ? (Math.exp(K_DRAG * d) - 1) / (K_DRAG * RIFLE.v0) : d / RIFLE.v0;   // s
+const rangeAt = (tau) => K_DRAG ? Math.log(1 + K_DRAG * RIFLE.v0 * tau) / K_DRAG : RIFLE.v0 * tau;   // inverse of tof
 const dropM = (d) => 0.5 * G * tof(d) * tof(d);   // m below the bore line
 const dropMilsRaw = (d) => 1000 * dropM(d) / d;
-const zeroMils = dropMilsRaw(Z0);   // 1.0010 mil
+let zeroMils = dropMilsRaw(Z0);   // 1.0010 mil for the SVD
 const dropMils = (d) => dropMilsRaw(d) - zeroMils;   // holdover shown in the table
 const dropOffsetM = (d) => zeroMils / 1000 * d - dropM(d);   // vertical impact offset vs crosshair (m)
-const leadMils = (v, d = 300) => 1000 * v * tof(d) / d;   // 1.4286·v
-const windM = (d, wind) => wind * tof(d) * K_WIND;   // m, + = right
-const windMils = (d, wind) => 1000 * windM(d, wind) / d;   // 0.5714·wind
+const leadMils = (v, d = 300) => 1000 * v * tof(d) / d;   // 1.4286·v for the SVD
+const windM = (d, wind) => wind * tof(d) * K_WIND * RIFLE.kWind;   // m, + = right
+const windMils = (d, wind) => 1000 * windM(d, wind) / d;   // 0.5714·wind for the SVD
+/* Equip: copy the catalogue rows into RIFLE / SCOPE / GEAR / COS and re-derive everything that depends on them. */
+function applyLoadout() {
+  const lo = save.loadout, r = ITEM_BY_ID[lo.rifle] || ITEM_BY_ID.rifle_svd, sc = ITEM_BY_ID[lo.scope] || ITEM_BY_ID.scope_std;
+  RIFLE.id = r.id; RIFLE.name = r.name; RIFLE.v0 = r.v0; RIFLE.kWind = r.kWind; RIFLE.bolt = r.bolt; RIFLE.recoil = r.recoil; RIFLE.sway = r.sway; RIFLE.ammoMod = r.ammoMod;
+  SCOPE.id = sc.id; SCOPE.name = sc.name; SCOPE.zooms = sc.zooms; SCOPE.turret = !!sc.turret; SCOPE.windTick = !!sc.windTick;
+  for (const k in GEAR) GEAR[k] = !!save.owned['gear_' + k];
+  COS.finish = save.owned[lo.finish] ? lo.finish : 'finish_default'; COS.reticle = (ITEM_BY_ID[lo.reticle] && save.owned[lo.reticle]) ? ITEM_BY_ID[lo.reticle].style : 0; COS.palette = save.owned[lo.palette] ? lo.palette : 'pal_default';
+  zeroMils = dropMilsRaw(Z0);
+  sway.mult = RIFLE.sway * (GEAR.bipod ? 0.6 : 1);
+  BREATH.sweet = GEAR.breath ? 5.0 : 3.0; BREATH.strain = BREATH.sweet + 1.0; BREATH.cooldown = GEAR.breath ? 1.5 : 2.5;
+  if (!SCOPE.turret) dial = 0;
+  if (typeof document !== 'undefined' && $('app')) { $('app').className = COS.finish === 'finish_default' ? '' : COS.finish === 'finish_steel' ? 'finish-steel' : 'finish-gold'; if (save.hand === 1) $('app').classList.add('lefty'); }
+}
+function levelAmmo(L) { return mode === 'level' ? Math.max(3, L.ammo + RIFLE.ammoMod) : L.ammo; }   // ammo mod per level, min 3
 const impactX = (az, d, wind) => az / 1000 * d + windM(d, wind);
 const impactY = (el, d) => el / 1000 * d + dropOffsetM(d);
 
