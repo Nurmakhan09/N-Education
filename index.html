@@ -1101,7 +1101,8 @@ function genWave(n, opts) {
 
 /* ==== 5. SAVE ==== */
 /* Schema v2 (SHOP-SPEC §1): coins, lifetime coinsEarned, owned set, loadout ids, consumable inventory, shop bookkeeping. */
-const DEFAULTS = () => ({ v: 2, unlocked: 1, stars: Array(12).fill(0), best: Array(12).fill(0), medals: Array(12).fill(0),
+const ALL_UNLOCKED = true;   // set to false for the release: levels then unlock one after another
+const DEFAULTS = () => ({ v: 2, unlocked: ALL_UNLOCKED ? 12 : 1, stars: Array(12).fill(0), best: Array(12).fill(0), medals: Array(12).fill(0),
   records: { range: 0, streak: 0, acc: 0, hits: 0 }, rankSeen: 0, hintsSeen: { hold: 0, table: 0, lead: 0, bird: 0, wind: 0 },
   daily: { date: 0, best: 0, attempts: 0, coinsDone: 0 }, endless: { best: 0, bestWave: 0 }, mute: 0, vibe: 1, sens: 1, hand: 0,
   coins: 0, coinsEarned: 0, owned: ownedSet(DEFAULT_OWNED), loadout: { rifle: 'rifle_svd', scope: 'scope_std', finish: 'finish_default', reticle: 'ret_classic', palette: 'pal_default' },
@@ -1142,6 +1143,7 @@ function loadSave() {
   if (d.daily.date !== dateKey()) { d.daily = { date: dateKey(), best: 0, attempts: 0, coinsDone: 0 }; }
   let lastStar = -1; for (let i = 0; i < 12; i++) if (d.stars[i] > 0) lastStar = i;
   d.unlocked = clamp(Math.max(d.unlocked, lastStar + 2), 1, 12);   // grid and Start agree
+  if (ALL_UNLOCKED) d.unlocked = 12;                                // test mode: every level, endless and daily open from the start
   save = d; applyLoadout();
 }
 function writeSave() { saveTimer = 0; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { storageOk = false; } }
@@ -2528,12 +2530,10 @@ function drawPopups(t) {
 }
 function drawArrow(t) {
   const e = t - arrowFx.t0; if (e < 0 || e > 1.2) return;
-  const x0 = sx(arrowFx.az), y0 = sy(arrowFx.el), x1 = sx(arrowFx.tAz), y1 = sy(arrowFx.tEl); const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 1) return;
-  const len = Math.min(L, 40), ux = dx / L, uy = dy / L, ex = x0 + ux * len, ey = y0 + uy * len;
-  ctx.globalAlpha = e > 1 ? 1 - (e - 1) / 0.2 : 1; ctx.strokeStyle = '#ff6b57'; ctx.fillStyle = '#ff6b57'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.stroke(); ctx.beginPath(); ctx.moveTo(ex + ux * 6, ey + uy * 6); ctx.lineTo(ex - uy * 4, ey + ux * 4);
-  ctx.lineTo(ex + uy * 4, ey - ux * 4); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.arc(x0, y0, 3, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
+  /* impact marker only (user request): a red dot where the bullet landed, no correction arrow — the text feedback carries the correction */
+  const x0 = sx(arrowFx.az), y0 = sy(arrowFx.el);
+  ctx.globalAlpha = e > 1 ? 1 - (e - 1) / 0.2 : 1; ctx.fillStyle = '#ff3b2f'; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x0, y0, 4, 0, 6.2832); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
 }
 function drawRimArrows(t) {
   const { cx, cy, R } = layout;
