@@ -265,7 +265,7 @@ canvas { display: block }
 #ammoPips i.off { background: var(--line-strong); box-shadow: none; opacity: .5 }
 .hud-row2 { position: absolute; top: calc(44px + var(--sat)); left: 0; right: 0; height: 26px; font-size: 13px; line-height: 26px; text-shadow: 0 1px 3px var(--text-shadow) }
 #hudScore { position: absolute; left: 16px; top: 0; font-weight: 500 }
-#hudWind { position: absolute; left: 50%; transform: translateX(-50%); top: 0; white-space: nowrap; height: 26px; line-height: 24px; padding: 0 12px; border-radius: 13px; background: var(--glass); border: 1px solid var(--glass-line); box-shadow: inset 0 1px 0 var(--glass-hi), 0 2px 8px var(--glass-shadow) }   /* centre pill, above the tube */
+#hudWind { position: absolute; left: 50%; transform: translateX(-50%); top: 0; white-space: nowrap; height: 26px; line-height: 24px; padding: 0 12px; border-radius: 13px; background: var(--glass-2); border: 1px solid var(--glass-line); box-shadow: inset 0 1px 0 var(--glass-hi), 0 2px 8px var(--glass-shadow) }   /* centre pill on a dark chip: the tube is taller than the screen, so it sits over the top of the glass */
 #hudTime { position: absolute; left: 150px; top: 0; font-weight: 500 }
 #hudTime.low { color: var(--miss) }
 #hudChallenges { position: absolute; left: 16px; top: calc(76px + var(--sat)); display: flex; gap: 8px; height: 24px; padding: 4px 8px; border-radius: 16px; background: var(--glass); border: 1px solid var(--glass-line) }
@@ -287,11 +287,16 @@ canvas { display: block }
 #hudStreak.shake { animation: chipShake .2s linear, chipFade .3s linear .2s forwards }
 @keyframes chipShake { 0%,100% { transform: translateX(0) } 20% { transform: translateX(4px) } 40% { transform: translateX(-4px) } 60% { transform: translateX(3px) } 80% { transform: translateX(-2px) } }
 @keyframes chipFade { to { opacity: 0 } }
-#hudRange { position: absolute; transform: translate(-50%, -50%); font-size: 18px; font-weight: 500; white-space: nowrap; text-shadow: 0 1px 4px var(--shadow); letter-spacing: .02em }
-#hudRangeCap { position: absolute; transform: translate(-100%, -50%); font-size: 13px; color: var(--text); opacity: .85; white-space: nowrap; text-shadow: 0 1px 4px var(--shadow) }
-#flightBar { position: absolute; height: 4px; border-radius: 2px; background: var(--line-strong); overflow: hidden }
-#flightFill { height: 100%; width: 0; background: var(--tracer); border-radius: 2px }
-#flightLabel { position: absolute; font-size: 13px; color: var(--muted); text-align: left; white-space: nowrap; transform: translateY(-100%) }
+/* range readout: outside the tube, right of the glass, above the АТУ/ДЕМ cluster (placed by positionHUD) */
+#rangeBox { position: absolute; display: flex; flex-direction: column; align-items: flex-end; text-align: right; pointer-events: none }
+#hudRange { font-size: 20px; font-weight: 600; line-height: 1.1; white-space: nowrap; text-shadow: 0 1px 4px var(--shadow); letter-spacing: .02em }
+#hudRangeCap { font-size: 12px; line-height: 1.15; color: var(--text); opacity: .85; text-shadow: 0 1px 4px var(--shadow); margin-top: 2px }
+/* flight readout: glass chip inside the tube at the bottom («0,57 с · 400 м», metres tick up, bar fills over the real time of flight) */
+#flightChip { position: absolute; transform: translate(-50%, -50%); width: 168px; padding: 5px 12px 6px; box-sizing: border-box; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--glass-line); box-shadow: inset 0 1px 0 var(--glass-hi), 0 2px 8px var(--glass-shadow); text-align: center }
+#flightLabel { font-size: 14px; font-weight: 500; line-height: 18px; color: var(--text); white-space: nowrap; text-shadow: 0 1px 3px var(--text-shadow) }
+#flightLabel .k { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--muted); margin-right: 6px }
+#flightBar { height: 3px; margin-top: 4px; border-radius: 2px; background: var(--line-strong); overflow: hidden }
+#flightFill { height: 100%; width: 0; background: var(--tracer); border-radius: 2px; box-shadow: 0 0 6px var(--tracer) }
 #feedback { position: absolute; left: 0; right: 0; min-height: 24px; line-height: 1.3; text-align: center; font-size: 15px; font-weight: 500; white-space: nowrap }
 #feedback .big { font-size: 16px; font-weight: 700 }
 @media (max-width: 400px) { #feedback .sep { display: block; font-size: 0; line-height: 0 } }   /* two-part correction wraps clear of the zoom button */
@@ -320,7 +325,7 @@ canvas { display: block }
 #btnBreath.jolt { animation: jolt .15s linear }
 @keyframes jolt { 0%,100% { margin-left: 0 } 25% { margin-left: 4px } 75% { margin-left: -4px } }
 #btnZoom { width: 64px; height: 64px; font-size: 18px }
-#btnTable, #btnPause { width: 48px; height: 48px; border-radius: 12px; transform: translate(-50%, -50%) }
+#btnTable, #btnPause { width: 48px; height: 48px; border-radius: 12px; transform: translate(-50%, -50%); background: var(--glass-2) }   /* top row: may sit over the clipped top of the tube, so a darker chip */
 #btnTable:active, #btnPause:active { transform: translate(-50%, -50%) scale(.94) }
 #btnHip { width: 56px; height: 56px; font-size: 11px }
 #btnDialUp, #btnDialDown { width: 48px; height: 48px; font-size: 11px }
@@ -592,10 +597,8 @@ canvas { display: block }
       <div id="hudChallenges" data-testid="hud-challenges"></div>
       <div id="hudStreak" data-testid="hud-streak" hidden>Серия ×2</div>
       <div id="hudTurret" data-testid="hud-turret" hidden>Турель <span class="v num">0,0</span> мил</div>
-      <div id="hudRange" data-testid="hud-range">— м</div>
-      <div id="hudRangeCap"></div>
-      <div id="flightLabel" hidden></div>
-      <div id="flightBar" hidden><div id="flightFill"></div></div>
+      <div id="rangeBox"><div id="hudRange" data-testid="hud-range">— м</div><div id="hudRangeCap"></div></div>
+      <div id="flightChip" data-testid="flight-chip" hidden><div id="flightLabel"></div><div id="flightBar"><div id="flightFill"></div></div></div>
       <div id="feedback"></div>
       <button class="rbtn ctl" id="btnTable" data-testid="btn-table" aria-label="Баллистика кестесі"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10M14.5 9.5v10"/></svg></button>
       <button class="rbtn ctl" id="btnHip" data-testid="btn-hip" aria-label="Кең көрініс"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="3"/></svg><span class="lbl">КӨРІНІС</span></button>
@@ -742,6 +745,7 @@ const SWAY_A = [0.5, 0.65, 0.8];   // peak mil by level group
 const BREATH = { ramp: 0.4, sweet: 3.0, strain: 4.0, held: 0.15, strainTo: 1.6, gasp: 1.3, recover: 1.0, cooldown: 2.5 };   // sweet/strain/cooldown re-set by applyLoadout()
 const PPM_PER_X = 1.625, BASE_PPM = { 4: 6.5, 8: 13, 12: 19.5 };   // px per mil at R = 186 (BASE_PPM: the briefing zooms used by the fit rule)
 const R_REF = 186;
+const TUBE_K = 0.64, TUBE_K_TALL = 0.5, VIS_K = 0.5 / TUBE_K;   // landscape phone: R = 0.64·h (the tube is clipped top and bottom, like real mobile sniper games); ≥ 600 px tall (desktop): R = 0.5·h. VIS_K: visible half-height / R on the phone
 const STRIP_PPM = 24, STRIP_AZ = 70, STRIP_EL_TOP = 12, STRIP_EL_BOT = -35; // background strip in mil space (24 px/mil: crisp up to ×12, soft at ×20)
 const PARALLAX = 0.035;   // the far layer pans 3.5 % less than the world (ART-SPEC §2)
 const SENS = [0.6, 1.0, 1.4];
@@ -1015,7 +1019,7 @@ const LEVELS = [
   { id: 5, name: 'Жел', palette: 'qys', zoom: 8, ammo: 10, count: 5, timeLimit: 0, wind: 3, gust: 0, gold: null, hint: 'wind', sway: 1,
     stars: { two: 2, three: 1 }, challenges: ['noBreath', 'farFirst', 'noMiss'], card: 'Желді ескер.',
     targets: [st('plate', 300, -5, 0), st('plate', 350, -2.5, 0), st('plate', 400, 0, 0), st('plate', 450, 2.5, 0), st('plate', 500, 5, 0)] },
-  { id: 6, name: 'Алыс тақталар', palette: 'qys', zoom: 12, ammo: 13, count: 5, timeLimit: 0, wind: -1.5, gust: 0, gold: null, hint: null, sway: 1,
+  { id: 6, name: 'Алыс тақталар', palette: 'qys', zoom: 8, ammo: 13, count: 5, timeLimit: 0, wind: -1.5, gust: 0, gold: null, hint: null, sway: 1,
     stars: { two: 2, three: 1 }, challenges: ['noTable', 'noMiss', 'allBull'], card: 'Алыс нысаналар — кестені қара.',
     targets: [st('plate', 500, -4, 0), st('plate', 600, -1, 0), st('plate', 700, 2, 0.5), st('plateL', 800, 5, 0.5), st('plateL', 900, 0, 1.0)] },
   { id: 7, name: 'Жүгіретін рельс', palette: 'ymyrt', zoom: 8, ammo: 11, count: 6, timeLimit: 0, wind: 0, gust: 0, gold: { d: 350 }, hint: null, sway: 1,
@@ -1052,7 +1056,9 @@ function validateRows(L, problems, tag) {
     const vy = r.Ay ? r.Ay * 2 * Math.PI / r.Ty : (r.dv || 0);
     const az = leadMils(v) + Math.abs(windMils(r.d, L.wind + (L.gust ? 1 : 0))) + k.w / 2 * 1000 / r.d;
     const el = Math.abs(dropMils(r.d)) + leadMils(vy) + k.h / 2 * 1000 / r.d;
-    if (Math.hypot(az, el) * BASE_PPM[L.zoom] > R_REF - 8) problems.push(`${tag} t${i} fit ${Math.round(Math.hypot(az, el) * BASE_PPM[L.zoom])}px`);
+    /* fit: the target at the briefing zoom must stay inside the VISIBLE glass — the tube circle (R) intersected with the screen (the phone screen is only 2 · VIS_K · R tall), minus 8 px */
+    const p = BASE_PPM[L.zoom], px = Math.hypot(az, el) * p, py = el * p;
+    if (px > R_REF - 8 || py > R_REF * VIS_K - 8) problems.push(`${tag} t${i} fit ${Math.round(px)}px/${Math.round(py)}px`);
   });
 }
 function validateLevels() {
@@ -1173,7 +1179,8 @@ const flash = { t0: -10, az: 0, el: 0 };
 const arrowFx = { t0: -10, az: 0, el: 0, tAz: 0, tEl: 0 };
 const feedback = { text: '', sub: '', kind: '', until: -1 };
 const bullet = { active: false, tFire: 0, tImpact: 0, tLand: 0, azFire: 0, elFire: 0, t: 0, s: 0, sLand: 0, hitTarget: null, missA: null, ix: 0, iy: 0, iAz: 0, iEl: 0, ground: false, wind: 0,
-  cam: false, camStart: 0, camBudget: false, slowSim: 0, breathHeld: false, diving: false, moving: false, vAtFire: 0 };
+  cam: false, camStart: 0, camBudget: false, slowSim: 0, breathHeld: false, diving: false, moving: false, vAtFire: 0, follow: false, followStart: 0 };
+let flightHideAt = -1;   // sim time until which the flight readout stays after impact
 /* miss tail: the tracer flies on to the ground after the outcome is resolved */
 const tail = { on: false, miss: false, tFire: 0, tLand: 0, azFire: 0, elFire: 0, wind: 0, sLand: 0, ground: false, iAz: 0, iEl: 0, arcUntil: -10, arcS: 0 };
 const tracerMark = { t0: -10, az: 0, el: 0 };   // gear_tracer: impact marker persists 3 s
@@ -1447,12 +1454,14 @@ function fireShot(hook) {
     const special = hitT.d > 500 || B.moving || BIRD_KINDS[hitT.kind] || hitT.kind === 'gold' || (hitT.mandatory && aliveMandatory() === 1);
     if (lastMandatory || (special && wallNow - lastCamAt >= 20000)) { B.cam = true; B.slowSim = clamp(0.4 * t, 0.225, 0.40); B.camStart = B.tImpact - B.slowSim; B.camBudget = !lastMandatory; }   // budget stamped in camStart()
   }
+  /* follow slow-mo (no rate limit): the final 40 % of any shot at ≥ 300 m or at a moving / bird target; the bullet cam wins when both apply */
+  const fT = hitT || A; B.follow = !B.cam && (sRes >= 300 || (fT ? !!MOVING_KINDS[fT.kind] || !!BIRD_KINDS[fT.kind] : false)); B.followStart = B.tFire + 0.6 * tRes;
   sess.ammo--; sess.shots++; if (hitT && hitT.kind === 'gold') sess.goldShots++;
   if (!$('hint').hidden) hintDismiss();   // hint off on fire
   phase = 'flight'; lockUntil = simTime + Math.max(RIFLE.bolt, tRes + LOCK_AFTER_IMPACT);
   recoil.t0 = simTime; recoil.az = 0.3 * RIFLE.recoil * (2 * u3 - 1);
   spawnParticle(PK.SMOKE, az, el - 4.5, 0.3 * (u2 - 0.5), 1.4, 0.7, 0, 1.6 * RIFLE.recoil, 0);   // muzzle smoke rises from under the view
-  sfx.shot(); buzz(Math.round(18 * RIFLE.recoil)); queueSound(simTime + 0.35 * RIFLE.bolt / 0.9, sfx.bolt, 0); queueSound(simTime + 0.65 * RIFLE.bolt / 0.9, sfx.bolt, 0);
+  sfx.shot(); sfx.whoosh(tRes); buzz(Math.round(18 * RIFLE.recoil)); queueSound(simTime + 0.35 * RIFLE.bolt / 0.9, sfx.bolt, 0); queueSound(simTime + 0.65 * RIFLE.bolt / 0.9, sfx.bolt, 0);   // the whoosh spans the real time of flight; the impact sound follows with its distance delay
   const oc = chGet('onlyN'); if (oc && oc.state === 0 && sess.shots > oc.n) chFail('onlyN');
   if (sess.ammo === 1 && !sess.lastShotBanner) { sess.lastShotBanner = true; banner(S.lastShot); }
   uiOnFire();
@@ -1567,7 +1576,8 @@ function resolveImpact() {
   }
   /* last bullet with targets alive → «Оқ таусылды» */
   if (phase === 'aim' && sess.ammo <= 0 && aliveMandatory() > 0) { phase = 'ending'; endAt = tI + 0.6; endKind = 'ammo'; }
-  if (cam.on) camImpact();
+  if (cam.on) camImpact(); else if (follow.on) followEnd(false);
+  flightHideAt = tI + 0.3;   // the flight readout lingers 300 ms after impact
   uiOnImpact();
 }
 function buzzDelayed() { buzz([8, 30, 8]); }
@@ -1629,7 +1639,7 @@ function startMode(m, opts) {
 }
 function beginPlay(L, retry, intro) {
   clearSounds(); clearParticles(); bannerCount = 0; for (const p of POPS) p.on = false;
-  cam.on = false; cam.phase = 'off'; cam.S = 1; timeScale = 1; bullet.active = false; bullet.hitTarget = null; tail.on = false; tail.arcUntil = -10;
+  cam.on = false; cam.phase = 'off'; cam.S = 1; timeScale = 1; bullet.active = false; bullet.hitTarget = null; tail.on = false; tail.arcUntil = -10; followEnd(true); flightHideAt = -1;
   recoil.t0 = -10; shake.t0 = -10; flash.t0 = -10; arrowFx.t0 = -10; feedback.until = -1; feedback.text = '';
   breath.phase = 'normal'; breath.m = 1; hip = false; hipT0 = -1e9; dial = 0; windTick.on = false; tracerMark.t0 = -10; coinFx.hold = 0; uiHip();
   paused = false; overlay = 'none'; $('tableOverlay').hidden = true; $('pauseOverlay').hidden = true;   // no inherited sheet
@@ -1663,7 +1673,7 @@ function nextWave() {
   if (!L) { finishRun('daily'); return; }
   const ammoCarry = sess.ammo, score = sess.score, streak = sess.streak, sr = sess.streakRaw, ls = sess.longestStreak, lh = sess.longestHit, hits = sess.hits, shots = sess.shots, misses = sess.misses, bulls = sess.bulls, gs = sess.goldShots, nm = sess.nearMisses.slice(), hl = sess.hitList.slice();
   const rbR = sess.recBefore.range, rbS = sess.recBefore.streak, rfR = sess.recordsFlashed.range, rfS = sess.recordsFlashed.streak, rfAt = sess.streakRecordFlashAt, erf = sess.endlessRecordFlashed;   // once-per-run flashes
-  level = L; clearParticles(); bullet.active = false; tail.on = false; tail.arcUntil = -10; cam.on = false; timeScale = 1; phase = 'aim'; endAt = -1;
+  level = L; clearParticles(); bullet.active = false; tail.on = false; tail.arcUntil = -10; cam.on = false; timeScale = 1; phase = 'aim'; endAt = -1; followEnd(true); flightHideAt = -1;
   resetSession(L); spawnTargets(L); sess.ammo = ammoCarry + L.ammo; sess.score = score; sess.shown = score; sess.streak = streak; sess.streakRaw = sr; sess.longestStreak = ls;
   sess.longestHit = lh; sess.hits = hits; sess.shots = shots; sess.misses = misses; sess.bulls = bulls; sess.goldShots = gs;
   sess.wave = wave; sess.recBefore.range = rbR; sess.recBefore.streak = rbS; sess.recordsFlashed.range = rfR; sess.recordsFlashed.streak = rfS; sess.streakRecordFlashAt = rfAt; sess.endlessRecordFlashed = erf;
@@ -1750,7 +1760,8 @@ function resumeSecond() {
 /* -- bullet cam runtime (§8.A5) */
 function camStart() {
   cam.on = true; cam.phase = 'in'; cam.tPhase = wallNow; cam.cAz = aim.az; cam.cEl = aim.el; cam.S = 1; cam.skipped = false; cam.u = 0; if (bullet.camBudget) lastCamAt = wallNow;
-  const T = bullet.hitTarget; cam.sizeMils = Math.max(T.w, T.h) * 1000 / T.d; cam.Zcam = clamp(112 / (cam.sizeMils * ppm), 1.5, 3);
+  const T = bullet.hitTarget; cam.sizeMils = Math.max(T.w, T.h) * 1000 / T.d; cam.Zcam = clamp(112 * layout.R / R_REF / (cam.sizeMils * ppm), 1.5, 3);   // the target fills the same share of the tube at every R
+  if (follow.on) followEnd(true);   // the last-target bullet cam takes precedence
   phase = 'cam'; setFeedback(S.camHint, '', 'cam', 5);
 }
 function camImpact() { cam.tImpactWall = wallNow; cam.phase = 'hold'; cam.tPhase = wallNow; }
@@ -1778,6 +1789,24 @@ function updateCam(dtWall) {
   cam.S = reducedMotion ? 1 : 1 + (cam.Zcam - 1) * outCubic(cam.u);
 }
 
+/* -- follow slow-mo: every shot at ≥ 300 m or on a moving / bird target rides its final 40 % at timeScale 0.5, the view easing 25 % toward the impact point.
+   Tap skips it; no rate limit; the last-target bullet cam (0.25×) takes precedence. No PRNG draws: purely cosmetic. */
+const follow = { on: false, phase: 'off', tPhase: 0, k: 0, tAz: 0, tEl: 0 };
+function followStart() {
+  const B = bullet; follow.on = true; follow.phase = 'in'; follow.tPhase = wallNow; follow.k = 0;
+  tracerAt(B, B.t, B.s); follow.tAz = TR.az; follow.tEl = TR.el;   // the resolved impact point (target plane or attributed miss plane)
+  timeScale = 0.5;
+}
+function followEnd(instant) { if (!follow.on) return; if (instant) { follow.on = false; follow.phase = 'off'; follow.k = 0; if (!cam.on) timeScale = 1; return; } follow.phase = 'out'; follow.tPhase = wallNow; }
+function followSkip() { if (follow.on && follow.phase !== 'out') followEnd(false); }
+function updateFollow(dtWall) {
+  if (!follow.on) return;
+  if (cam.on) { followEnd(true); return; }
+  const e = wallNow - follow.tPhase;
+  if (follow.phase === 'in') { timeScale = 0.5; follow.k = 0.25 * outCubic(clamp(e / 160, 0, 1)); if (!bullet.active) { follow.phase = 'out'; follow.tPhase = wallNow; } }
+  else { const u = clamp(e / 180, 0, 1); timeScale = lerp(0.5, 1, u); follow.k = 0.25 * (1 - u); if (u >= 1) { follow.on = false; follow.phase = 'off'; follow.k = 0; timeScale = 1; } }
+}
+
 /* -- feedback line */
 function setFeedback(text, sub, kind, dur) { feedback.text = text; feedback.sub = sub; feedback.kind = kind; feedback.until = simTime + dur; uiFeedback(); }
 
@@ -1796,6 +1825,7 @@ function simStep(dt) {
   }
   const uc = chGet('under'); if (uc && uc.state === 0 && phase !== 'ending' && phase !== 'ended' && sess.elapsed > uc.n) chFail('under');
   if (bullet.active && bullet.cam && !cam.on && simTime >= bullet.camStart && phase === 'flight') { bullet.cam = false; if (!hip) camStart(); }   // same for rAF and step(); never from the hip view
+  if (bullet.active && bullet.follow && !follow.on && !cam.on && !bullet.cam && simTime >= bullet.followStart && phase === 'flight') { bullet.follow = false; if (!hip) followStart(); }
   if (bullet.active && simTime >= bullet.tImpact) resolveImpact();
   if (tail.on && simTime >= tail.tLand) tailLand();
   if (feedback.until >= 0 && simTime > feedback.until && feedback.kind !== 'cam') { feedback.until = -1; feedback.text = ''; uiFeedback(); }
@@ -1814,7 +1844,7 @@ function snapshot() {
 const $ = (id) => document.getElementById(id);
 const mkEl = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const canvas = $('game'), ctx = canvas.getContext('2d', { alpha: false });
-const layout = { w: 390, h: 844, cx: 195, cy: 400, R: 186, dpr: 1, landscape: false };
+const layout = { w: 390, h: 844, cx: 195, cy: 400, R: 186, Rt: 186, Rb: 186, dpr: 1, landscape: false, hk0: 0 };
 const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* Palettes: one sun per palette (light = unit vector the shadows fall along, screen x/y), sky stops, ground tones, grass tones, dressing colours.
    dala: warm day (sun upper-left) · qys: winter (grey sky, blue shadows) · ymyrt: dusk (sun low right, long shadows) · tau: mountains (cool) · tun: night (moon upper-right, cosmetic). */
@@ -1858,8 +1888,9 @@ function resize() {
   layout.w = w; layout.h = h; layout.dpr = dpr; layout.landscape = w > h;   // landscape-only game: any wider-than-tall viewport gets the two-thumb layout
   const portrait = h > w; $('rotateOverlay').hidden = !portrait;             // portrait is blocked with the rotate prompt …
   if (portrait && screen === 'play' && phase !== 'intro') togglePause(true); // … and a running level is paused under it
-  if (layout.landscape) { layout.R = 0.44 * Math.min(w, h); layout.cx = w / 2; layout.cy = h / 2; }
+  if (layout.landscape) { layout.R = Math.round(Math.min((h < 600 ? TUBE_K : TUBE_K_TALL) * h, 0.42 * w)); layout.cx = w / 2; layout.cy = h / 2; }   // phone: the tube is taller than the screen; desktop: R = h/2; capped so the tube fits a squarer window
   else { layout.R = clamp(Math.min(0.477 * w, (h - 375) / 2), 120, 220); layout.cy = h - 258 - layout.R; layout.cx = w / 2; }
+  layout.Rt = Math.min(layout.R, layout.cy); layout.Rb = Math.min(layout.R, h - layout.cy);   // visible extent of the tube above / below its centre
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
   if (SCOPE.zooms.indexOf(zoom) < 0) zoom = SCOPE.zooms[1]; ppm = ppmOf(zoom); zoomAnim.t0 = -1; bakeVignette(); bakeReticles(); initSnow(); positionHUD();
   const mc = $('menuCanvas'); mc.width = Math.round(w * dpr); mc.height = Math.round(h * dpr);
@@ -1871,31 +1902,37 @@ function positionHUD() {
   const put = (id, x, y) => { const e = $(id); e.style.left = (lefty ? w - x : x) + 'px'; e.style.top = y + 'px'; };
   const sab = 'var(--sab)';
   const putB = (id, x, fromBottom) => { const e = $(id); e.style.left = (lefty ? w - x : x) + 'px'; e.style.top = 'auto'; e.style.bottom = `calc(${fromBottom}px + ${sab})`; e.style.transform = 'translate(-50%, 50%)'; };
-  if (!landscape) { putB('btnFire', w - 80, 84); putB('btnBreath', w - 178, 62); putB('btnZoom', w - 50, 192); putB('btnTable', 60, 180); putB('btnPause', 60, 88); putB('btnHip', 60, 260); putB('btnDialDown', 124, 200); putB('btnDialUp', 124, 260); }
-  else {   /* ART-SPEC §7: right thumb АТУ Ø96 in the corner (24 px inset) with ДЕМ Ø64 touching its arc above-left; left thumb масштаб Ø64 in the corner with КӨРІНІС Ø56 above it, turret ▲▼ beside; КЕСТЕ and pause in the top row before the coins and mute */
-    putB('btnFire', w - 72, 72); putB('btnBreath', w - 134, 134); putB('btnZoom', 56, 56); putB('btnHip', 56, 124); putB('btnDialDown', 120, 56); putB('btnDialUp', 120, 112);
+  const rb = $('rangeBox'), fc = $('flightChip'), fd = $('feedback');
+  if (!landscape) { putB('btnFire', w - 80, 84); putB('btnBreath', w - 178, 62); putB('btnZoom', w - 50, 192); putB('btnTable', 60, 180); putB('btnPause', 60, 88); putB('btnHip', 60, 260); putB('btnDialDown', 124, 200); putB('btnDialUp', 124, 260);
+    rb.style.left = 'auto'; rb.style.right = '16px'; rb.style.top = 'auto'; rb.style.bottom = `calc(${Math.round(h - cy - R - 40)}px + ${sab})`; }
+  else {   /* ART-SPEC §7: right thumb АТУ Ø96 in the corner (24 px inset) with ДЕМ Ø64 touching its arc above-left; left thumb масштаб Ø64 in the corner with КӨРІНІС Ø56 above it, turret ▲▼ beside; КЕСТЕ and pause in the top row before the coins and mute.
+              The tube is taller than the screen, so each button takes the first of its candidate spots that overlaps the visible glass by ≤ 8 px (ДЕМ also keeps clear of АТУ). */
+    const over = (x, yb, r) => R - (Math.hypot(x - cx, h - yb - cy) - r);   // how far a Ø2r button at (x, bottom yb) reaches into the glass
+    const pick = (id, cands, r, avoid) => { let c = cands[cands.length - 1]; for (const k of cands) { if (over(k[0], k[1], r) <= 8 && (!avoid || Math.hypot(k[0] - avoid[0], k[1] - avoid[1]) >= r + avoid[2])) { c = k; break; } } putB(id, c[0], c[1]); return c; };
+    putB('btnFire', w - 72, 72);
+    const dem = pick('btnBreath', [[w - 134, 134], [w - 120, 148], [w - 92, 160], [w - 64, 168], [w - 48, 172]], 32, [w - 72, 72, 48]);   // slides up around the АТУ arc on narrow screens
+    putB('btnZoom', 56, 56); pick('btnHip', [[56, 124], [48, 130], [40, 136]], 28);
+    const dn = pick('btnDialDown', [[120, 56], [116, 52], [112, 48]], 24);
+    pick('btnDialUp', [[120, 112], [116, 108], [56, 180], [56, 186]], 24, [dn[0], dn[1], 24]);   // narrow: ▲ climbs above КӨРІНІС, ▼ stays beside the zoom
     for (const [id, x] of [['btnPause', w - 180], ['btnTable', w - 232]]) { const e = $(id); e.style.bottom = 'auto'; e.style.transform = ''; e.style.left = x + 'px'; e.style.top = 'calc(24px + var(--sat))'; }   // never mirrored: the top row stays with the coins and mute
+    /* range readout + caption: bottom-right, outside the tube, above the ДЕМ button; the caption wraps inside the column right of the glass */
+    const demTop = h - dem[1] - 32;   // top edge of ДЕМ
+    rb.style.left = 'auto'; rb.style.right = '16px'; rb.style.top = 'auto'; rb.style.bottom = `calc(${Math.round(h - demTop + 8)}px + ${sab})`; rb.style.width = Math.max(96, Math.round(w - (cx + R) - 24)) + 'px';
   }
-  /* range readout outside the circle at every R; caption right-anchored */
-  const rg = $('hudRange'), rc = $('hudRangeCap'), bx = rangeBoxX(), by = rangeBoxY();
-  rg.style.left = bx + 'px'; rg.style.top = by + 'px'; rc.style.left = (cx + 179 * rs) + 'px'; rc.style.top = (by + 18) + 'px';
-  const fb = $('flightBar'), fl = $('flightLabel'), fd = $('feedback'), barY = Math.max(cy + R + 14, by + 26);
-  fb.style.left = (cx - 155) + 'px'; fb.style.width = '310px'; fb.style.top = barY + 'px';
-  fl.style.left = (cx - 155) + 'px'; fl.style.top = (barY - 2) + 'px';
+  /* flight readout: centred inside the tube at the visible bottom */
+  fc.style.left = cx + 'px'; fc.style.top = (cy + layout.Rb - 36) + 'px';
   /* landscape: the feedback line sits in the HUD row under the top bar */
   if (landscape) {   /* free zone left of the tube, between the challenge chips and the КӨРІНІС button — never over the popup at the target */
     fd.style.top = 'calc(124px + var(--sat))'; fd.style.left = '16px'; fd.style.right = 'auto'; fd.style.width = Math.max(120, Math.round(cx - R - 40)) + 'px'; fd.style.whiteSpace = 'normal';
-  } else { fd.style.top = (barY + 6) + 'px'; fd.style.left = ''; fd.style.right = ''; fd.style.width = ''; fd.style.whiteSpace = ''; }
-  $('introTap').style.bottom = landscape ? '8px' : `calc(${Math.round(h - barY - 24)}px + ${sab})`;   // the free feedback row, not over ДЕМ
+  } else { fd.style.top = (cy + R + 20) + 'px'; fd.style.left = ''; fd.style.right = ''; fd.style.width = ''; fd.style.whiteSpace = ''; }
+  $('introTap').style.bottom = landscape ? '8px' : `calc(${Math.round(h - cy - R - 44)}px + ${sab})`;   // the free feedback row, not over ДЕМ
   placeHint($('hint'));
 }
-function rangeBoxX() { return layout.cx + 125 * layout.R / R_REF; }
-function rangeBoxY() { const { cx, cy, R } = layout, dx = rangeBoxX() - 30 - cx; return cy + Math.sqrt((R + 3) * (R + 3) - dx * dx) + 9; }
-/* Hint card: above the range readout, never over the thumb buttons. */
+/* Hint card: across the lower glass, above the flight chip, never over the thumb buttons. */
 function placeHint(e) {
-  const { w, h, cx, cy, R, landscape } = layout, rs = R / R_REF;
-  if (landscape) { e.style.left = (cx - R + 8) + 'px'; e.style.right = (w - cx - R + 8) + 'px'; } else { e.style.left = ''; e.style.right = ''; }
-  e.style.bottom = `calc(${Math.round(h - cy - 140 * rs)}px + var(--sab))`;
+  const { w, h, cx, cy, R, landscape } = layout;
+  if (landscape) { e.style.left = (cx - R * 0.72) + 'px'; e.style.right = (w - cx - R * 0.72) + 'px'; } else { e.style.left = ''; e.style.right = ''; }
+  e.style.bottom = `calc(${Math.round(h - cy - layout.Rb + 60)}px + var(--sab))`;
 }
 
 /* -- scope glass (per resize): the rim vignette, chromatic fringes and tube edge are gradient-stroked rings (gradients cached here, in canvas space), so only the ring's own pixels are touched per frame */
@@ -2202,8 +2239,9 @@ const V = { az: 0, el: 0, pp: 13, shx: 0, shy: 0 };
 const sx = (az) => layout.cx + (az - V.az) * V.pp + V.shx;
 const sy = (el) => layout.cy - (el - V.el) * V.pp + V.shy;
 
-/* -- the frame. Pixel budget (software rasterizers too): in the pure scope view the sharp scene is clipped to the tube (≈ 28 % of a landscape screen),
-   the outside gets the palette's 1/16-scale bake plus a flat dark fill, and the glass is a ring bake — no full-screen image blends, no live readbacks. */
+/* -- the frame. Pixel budget (software rasterizers too): in the pure scope view the sharp scene is clipped to the tube (R = 0.64·h on a phone: the circle is taller
+   than the screen and clipped top and bottom, so it covers most of the screen), the outside gets the palette's 1/16-scale bake plus a flat dark fill, and the glass is
+   a set of flat rings — no full-screen image blends, no live readbacks. */
 function drawFrame(dtWall) {
   if (screen !== 'play') return;
   const { w, h, cx, cy, R, dpr } = layout, L = level, pal = bgCache.pal, st = bgCache.canvas;
@@ -2218,6 +2256,7 @@ function drawFrame(dtWall) {
   const rτ = t - recoil.t0, rk = (rτ < 0.5 && rτ >= 0 ? Math.exp(-rτ / 0.12) : 0) * RIFLE.recoil;
   const swA = swayAz(t), swE = swayEl(t);
   V.az = cam.on ? cam.cAz : aim.az + swA + recoil.az * rk; V.el = cam.on ? cam.cEl : aim.el + dial * (1 - hk) + swE + 1.8 * rk; V.pp = pp;   // the scene is centred on the bore (aim + dial)
+  if (follow.k > 0 && !cam.on) { V.az = lerp(V.az, follow.tAz, follow.k); V.el = lerp(V.el, follow.tEl, follow.k); }   // follow slow-mo: the view eases toward the impact point
   const sτ = t - shake.t0; let sh = 0; if (sτ >= 0 && sτ < 0.2) sh = shake.A * Math.exp(-sτ / 0.06) * Math.sin(6.2832 * 30 * sτ) * (reducedMotion ? 0.4 : 1);
   V.shx = sh * shake.dx; V.shy = sh * shake.dy;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2251,7 +2290,7 @@ function drawFrame(dtWall) {
   /* 8. snow / motes */
   if (pal.snow) drawSnow(dtWall); else if (hk < 1 && !reducedMotion) drawMotes(t, hk);
   /* 8b. rangefinder labels (gear_lrf) and hip-view markers / bird paths / wind arrow */
-  lrfLabels = 0; if (GEAR.lrf || hk > 0.5) drawTargetLabels(t, hk);
+  lrfLabels = 0; if (GEAR.lrf || hk > 0.5 || (rangedTarget && hk < 0.5)) drawTargetLabels(t, hk);
   if (hk > 0.5) drawHipExtras(t, hk);
   /* 9. popups, correction arrow, banners, rim arrows */
   drawPopups(t); drawArrow(t); if (hk < 0.5) drawRimArrows(t); drawBanner(t);
@@ -2289,8 +2328,6 @@ function drawFrame(dtWall) {
     ctx.globalAlpha = 1 - hk; drawGlass();
     const swSpeed = Math.abs(swayAz(t) - swayAz(t - 0.06)) + Math.abs(swayEl(t) - swayEl(t - 0.06));   // breathing blurs the edge: a second, darker rim
     if (swSpeed > 0.004) { ctx.globalAlpha = Math.min(0.55, swSpeed * 9) * (1 - hk); ctx.strokeStyle = glass.rim; ctx.lineWidth = glass.rimW; ctx.beginPath(); ctx.arc(cx, cy, glass.rimR, 0, 6.2832); ctx.stroke(); }
-    ctx.globalAlpha = 1 - hk; const bx = rangeBoxX(), by = rangeBoxY(); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(bx - 30, by + 4); ctx.lineTo(bx - 30, by - 9); ctx.lineTo(bx - 21, by - 9); ctx.moveTo(bx + 30, by + 4); ctx.lineTo(bx + 30, by - 9); ctx.lineTo(bx + 21, by - 9); ctx.stroke();
     ctx.globalAlpha = 1;
   }
   uiFrame();
@@ -2298,7 +2335,7 @@ function drawFrame(dtWall) {
 const MUZ_A = [-0.42, -0.12, 0.2, 0.5], MUZ_L = [1.05, 1.5, 1.25, 0.85];
 function drawMuzzle(t, rτ, hk) {
   if (!(rτ >= 0 && rτ < 0.06)) return;
-  const { cx, cy, R, h } = layout, u = rτ / 0.06, X = cx + (hk > 0.5 ? 0 : 0), Y = lerp(cy + R * 0.92, h + 6, hk), s = (1 - u * 0.5) * R * (0.42 + 0.5 * hk) * RIFLE.recoil;
+  const { cx, cy, R, h } = layout, u = rτ / 0.06, X = cx, Y = lerp(cy + layout.Rb * 0.92, h + 6, hk), s = (1 - u * 0.5) * R * (0.42 + 0.5 * hk) * RIFLE.recoil;   // at the visible bottom of the tube
   ctx.globalAlpha = (1 - u) * 0.95;
   for (let i = 0; i < 4; i++) { const a = -Math.PI / 2 + MUZ_A[i] + recoil.az * 0.5, L = s * MUZ_L[i]; ctx.globalAlpha = (1 - u) * 0.75; ctx.save(); ctx.translate(X, Y); ctx.rotate(a); sprite(ctx, 'petal', 0, -L * 0.16, L, L * 0.32); ctx.restore(); }
   ctx.globalAlpha = (1 - u) * 0.95; sprite(ctx, 'flare', X - s * 0.7, Y - s * 0.7, s * 1.4, s * 1.4);
@@ -2314,10 +2351,10 @@ function drawMotes(t, hk) {
 }
 /* out-of-focus grass at the bottom of the objective: dark, wide, translucent strokes bending with the wind */
 function drawBlades(t, hk) {
-  const { cx, cy, R } = layout, night = bgCache.pal.night, winter = bgCache.pal.snow, bend = wind * 0.9;
+  const { cx, cy, R, Rb } = layout, night = bgCache.pal.night, winter = bgCache.pal.snow, bend = wind * 0.9, bw = Math.sqrt(R * R - Math.pow(Math.max(0, Rb - 0.15 * R), 2));   // rooted along the visible bottom of the tube (the circle or the screen edge)
   ctx.lineCap = 'round'; ctx.strokeStyle = winter ? 'rgba(120,130,150,.42)' : night ? 'rgba(6,10,20,.6)' : 'rgba(34,54,20,.5)';
   ctx.lineWidth = 4.5 * R / 170; ctx.globalAlpha = (1 - hk) * 0.85; ctx.beginPath();
-  for (let i = 0; i < BLADES.length; i++) { const b = BLADES[i], bx = cx + b.x * R * 0.98 - V.az * 0.6, by = cy + R + 4, hh = b.h * R, sway2 = Math.sin(t * 1.7 + b.ph) * (2 + Math.abs(wind)) + bend * 5 + b.lean * hh;
+  for (let i = 0; i < BLADES.length; i++) { const b = BLADES[i], bx = cx + b.x * bw - V.az * 0.6, by = cy + Rb + 4, hh = b.h * R, sway2 = Math.sin(t * 1.7 + b.ph) * (2 + Math.abs(wind)) + bend * 5 + b.lean * hh;
     ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + sway2 * 0.3, by - hh * 0.6, bx + sway2, by - hh); }
   ctx.stroke(); ctx.globalAlpha = 1;
 }
@@ -2339,14 +2376,15 @@ function drawLens(t, swA, swE) {
   ctx.globalAlpha = 1;
 }
 const RET_LINE = ['#111', '#111', 'rgba(20,20,20,.6)', '#ff3b30'];
-/* LRF range labels under every visible alive target (scope and hip view) */
+/* Range labels under alive targets (scope and hip view): the ranged target always shows its range (small, under it); every other one only with gear_lrf. lrfLabels counts the gear's labels only. */
 function drawTargetLabels(t, hk) {
   setFont(hk > 0.5 ? 11 : 12, 500); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#eef2f7'; ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3;
-  const { cx, cy, R } = layout;
+  const { cx, cy, R, h } = layout;
   for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.alive || !T.visible) continue;
+    const ranged = T === rangedTarget && hk < 0.5; if (!GEAR.lrf && !ranged) continue;
     const p = posAt(T, t), X = sx(1000 * p.x / T.d), Y = sy(1000 * p.y / T.d) + T.h / 2 * 1000 / T.d * V.pp + 4;
-    if (hk < 0.5 && Math.hypot(X - cx, Y - cy) > R - 14) continue;   // inside the tube only
-    if (!GEAR.lrf) continue;
+    if (hk < 0.5 && (Math.hypot(X - cx, Y - cy) > R - 14 || Y < 8 || Y > h - 18)) continue;   // inside the visible tube only
+    if (ranged && !GEAR.lrf) { setFont(11, 500); ctx.globalAlpha = 0.85; ctx.strokeText(T.dLabel, X, Y); ctx.fillText(T.dLabel, X, Y); ctx.globalAlpha = 1; setFont(hk > 0.5 ? 11 : 12, 500); continue; }
     ctx.strokeText(T.dLabel, X, Y); ctx.fillText(T.dLabel, X, Y); lrfLabels++; }
 }
 /* hip view dressing: target markers, bird flight paths, wind arrow with value at the top */
@@ -2465,18 +2503,36 @@ const TR = { az: 0, el: 0 }, DASH = [4, 4], NODASH = [];
 function tracerAt(src, tau, sCap) { const s = Math.min(rangeAt(Math.max(0, tau)), sCap), m = Math.max(s, 1); TR.az = src.azFire + windMils(m, src.wind); TR.el = src.elFire + zeroMils - dropMilsRaw(m); return s; }
 /* tracer colour: finish (cosmetic) and night palette (brighter); gear_tracer lengthens and brightens the streak */
 const TRACER_COL = { finish_default: '#ffe7a8', finish_steel: '#e6efff', finish_gold: '#ffe27a' }, TRACER_GLOW = { finish_default: 'rgba(255,154,60,.4)', finish_steel: 'rgba(150,190,255,.45)', finish_gold: 'rgba(255,210,74,.5)' };
+/* The streak: a glowing head at the bullet's true angular position (wind drift + drop, so the arc reads), a 60–90 px trail fading behind it (its length is measured on screen,
+   so it is the same size at every range and zoom), drawn in TRAIL_N segments of rising alpha and width. Head: additive-looking layered discs. */
+const TRAIL_N = 6, TRAIL_X = new Float32Array(TRAIL_N + 1), TRAIL_Y = new Float32Array(TRAIL_N + 1);
 function drawStreak(src, t, sCap) {
-  const tau = t - src.tFire, s = tracerAt(src, tau, sCap); const x1 = sx(TR.az), y1 = sy(TR.el), trail = GEAR.tracer ? 0.09 : 0.045;
-  tracerAt(src, Math.max(0, tau - trail), sCap); const x0 = sx(TR.az), y0 = sy(TR.el); tracerAt(src, Math.max(0, tau - trail * 2.6), sCap); const xf = sx(TR.az), yf = sy(TR.el);
-  const night = bgCache.pal && bgCache.pal.night, wd = Math.max(1.2, 4.5 * (1 - s / 1100)) * Math.sqrt(V.pp / 13) * (GEAR.tracer || night ? 1.4 : 1);
-  ctx.lineCap = 'round'; ctx.globalAlpha = 0.35; ctx.strokeStyle = TRACER_GLOW[COS.finish]; ctx.lineWidth = wd + 2; ctx.beginPath(); ctx.moveTo(xf, yf); ctx.lineTo(x0, y0); ctx.stroke(); ctx.globalAlpha = 1;   // fading tail
-  ctx.strokeStyle = TRACER_GLOW[COS.finish]; ctx.lineWidth = wd + (night ? 5 : 3); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-  ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-  const hs = wd * 3.2; sprite(ctx, 'spark', x1 - hs / 2, y1 - hs / 2, hs, hs); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x1, y1, wd * 0.7, 0, 6.2832); ctx.fill();   // hot core
+  const tau = t - src.tFire, s = tracerAt(src, tau, sCap), x1 = sx(TR.az), y1 = sy(TR.el);
+  tracerAt(src, Math.max(0, tau - 0.02), sCap); const vpx = Math.hypot(x1 - sx(TR.az), y1 - sy(TR.el)) / 0.02;   // apparent speed on screen, px/s
+  const want = (GEAR.tracer ? 90 : 72) * Math.sqrt(V.pp / 13), trail = clamp(want / Math.max(vpx, 1), 0.012, Math.max(0.012, tau));   // seconds of flight that make a 60–90 px trail
+  for (let i = 0; i <= TRAIL_N; i++) { tracerAt(src, Math.max(0, tau - trail * (1 - i / TRAIL_N)), sCap); TRAIL_X[i] = sx(TR.az); TRAIL_Y[i] = sy(TR.el); }
+  const night = bgCache.pal && bgCache.pal.night, wd = Math.max(1.4, 4.5 * (1 - s / 1100)) * Math.sqrt(V.pp / 13) * (GEAR.tracer || night ? 1.4 : 1), glow = TRACER_GLOW[COS.finish], col = TRACER_COL[COS.finish];
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = night ? 0.5 : 0.35; ctx.strokeStyle = glow; ctx.lineWidth = wd + 6; ctx.beginPath(); ctx.moveTo(TRAIL_X[0], TRAIL_Y[0]); for (let i = 1; i <= TRAIL_N; i++) ctx.lineTo(TRAIL_X[i], TRAIL_Y[i]); ctx.stroke();   // soft halo along the whole trail
+  for (let i = 0; i < TRAIL_N; i++) { const u = (i + 1) / TRAIL_N; ctx.globalAlpha = 0.15 + 0.85 * u * u; ctx.strokeStyle = col; ctx.lineWidth = wd * (0.35 + 0.65 * u); ctx.beginPath(); ctx.moveTo(TRAIL_X[i], TRAIL_Y[i]); ctx.lineTo(TRAIL_X[i + 1], TRAIL_Y[i + 1]); ctx.stroke(); }   // fading tail
+  /* head: layered discs, additive */
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.28; ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x1, y1, wd * 3.6, 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 0.6; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x1, y1, wd * 1.8, 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 1; const hs = wd * 4.4; sprite(ctx, 'spark', x1 - hs / 2, y1 - hs / 2, hs, hs);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x1, y1, wd * 0.8, 0, 6.2832); ctx.fill();   // hot core
+}
+/* faint dotted predicted arc from the bullet to its resolution range (the current shot only, while it flies) */
+function drawPredictedArc(B, t) {
+  const tau = t - B.tFire, s0 = tracerAt(B, tau, B.s); if (B.s - s0 < 5) return;
+  ctx.globalAlpha = 0.32; ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = 1; ctx.setLineDash(DASH); ctx.beginPath();
+  for (let i = 0; i <= 16; i++) { const s = s0 + (B.s - s0) * i / 16, m = Math.max(s, 1), az = B.azFire + windMils(m, B.wind), el = B.elFire + zeroMils - dropMilsRaw(m); if (i === 0) ctx.moveTo(sx(az), sy(el)); else ctx.lineTo(sx(az), sy(el)); }
+  ctx.stroke(); ctx.setLineDash(NODASH); ctx.globalAlpha = 1;
 }
 function drawTracer(t) {
   const B = bullet;
-  if (B.active) drawStreak(B, t, B.sLand);
+  if (B.active) { drawPredictedArc(B, t); drawStreak(B, t, B.sLand); }
   const mτ = t - tracerMark.t0;
   if (GEAR.tracer && mτ >= 0 && mτ < 3) { ctx.globalAlpha = mτ > 2.4 ? (3 - mτ) / 0.6 : 1; ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = 1.5; const X = sx(tracerMark.az), Y = sy(tracerMark.el);
     ctx.beginPath(); ctx.arc(X, Y, 5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X - 8, Y); ctx.lineTo(X - 3, Y); ctx.moveTo(X + 3, Y); ctx.lineTo(X + 8, Y); ctx.moveTo(X, Y - 8); ctx.lineTo(X, Y - 3); ctx.moveTo(X, Y + 3); ctx.lineTo(X, Y + 8); ctx.stroke(); ctx.globalAlpha = 1; }
@@ -2541,8 +2597,11 @@ function drawRimArrows(t) {
     const T = targets[i];
     if (!T.alive) continue;
     const p = posAt(T, t), dx = sx(1000 * p.x / T.d) - cx, dy = sy(1000 * p.y / T.d) - cy, L = Math.hypot(dx, dy);
-    if (L < R - 12) continue;
-    const ux = dx / L, uy = dy / L, gold = T.kind === 'gold', rr = R - (gold ? 16 : 10), sz = gold ? 12 : 8, X = cx + ux * rr, Y = cy + uy * rr;
+    if (L < R - 12 && dy > 24 - layout.Rt && dy < layout.Rb - 24) continue;   // visible: inside the circle and inside the screen (the tube is clipped top and bottom)
+    const ux = dx / L, uy = dy / L, gold = T.kind === 'gold', sz = gold ? 12 : 8;
+    let rr = R - (gold ? 16 : 10);   // the arrow sits on the visible rim: the circle or the screen edge, whichever comes first along the ray
+    if (uy < 0) rr = Math.min(rr, (layout.Rt - 24) / -uy); else if (uy > 0) rr = Math.min(rr, (layout.Rb - 24) / uy);
+    const X = cx + ux * rr, Y = cy + uy * rr;
     ctx.fillStyle = gold ? '#ffd24a' : 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.moveTo(X + ux * sz, Y + uy * sz); ctx.lineTo(X - uy * sz * 0.6, Y + ux * sz * 0.6);
     ctx.lineTo(X + uy * sz * 0.6, Y - ux * sz * 0.6); ctx.closePath(); ctx.fill(); }
 }
@@ -2554,7 +2613,7 @@ function drawBanner(t) {
     ctx.fillStyle = '#eef2f7'; ctx.fillText(b.sub, cx, cy + 18);
   }
   else {
-    setFont(18, 700); const y = cy - 142 * rs; if (!b.w) b.w = ctx.measureText(b.text).width + 24; const wdt = b.w; ctx.fillStyle = 'rgba(6,8,11,.6)'; ctx.fillRect(cx - wdt / 2, y - 16, wdt, 32);
+    setFont(18, 700); const y = Math.max(cy - 142 * rs, cy - layout.Rt + 88); if (!b.w) b.w = ctx.measureText(b.text).width + 24; const wdt = b.w; ctx.fillStyle = 'rgba(6,8,11,.6)'; ctx.fillRect(cx - wdt / 2, y - 16, wdt, 32);
     ctx.fillStyle = GOLD_BANNER.test(b.text) ? '#ffd24a' : '#eef2f7'; ctx.fillText(b.text, cx, y);
   }
   ctx.globalAlpha = 1;
@@ -2645,7 +2704,7 @@ function onPointerDown(e) {
   if (screen !== 'play') return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (phase === 'intro') { introDone(); return; }
-  if (cam.on) camSkip();
+  if (cam.on) camSkip(); followSkip();
   waveSkip();
   if (drag.on) return;
   drag.on = true; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; drag.moved = 0; drag.dead = true;
@@ -2717,7 +2776,7 @@ function bindInput() {
     const k = e.key;
     if (screen === 'play') {
       if (phase === 'intro') { introDone(); return; }
-      if (cam.on && k !== 'Shift') camSkip();
+      if (cam.on && k !== 'Shift') camSkip(); if (k !== 'Shift') followSkip();
       if (!$('hint').hidden) hintDismiss();
       if (k === ' ') { e.preventDefault(); if (waveSkip()) return; if (sess.ammo <= 0) sfx.dryClick(); else fireShot(false); }
       else if (k === 'Shift') { if (!shiftHeld) { shiftHeld = true; if (breath.phase === 'normal') breathTap(); } }
@@ -2881,11 +2940,11 @@ function hintTrigger(ev, T) {
 function hintDismiss() { const e = $('hint'); if (e.hidden) return; e.hidden = true; if (hintKind) { save.hintsSeen[hintKind] = 1; scheduleSave(); } hintKind = ''; sfx.tick(); }
 
 /* -- HUD updaters (DOM touched only on change) */
-const last = { fireLabel: '', level: '', hits: -1, lvlId: -1, rec: '', ammo: -1, ammoMax: -1, score: -1, wind: NaN, time: -1, range: -1, capT: null, cap: '', fireLock: null, fireEmpty: null, zoom: '', breath: '', ring: -1, flight: -1, tableLive: '', feedback: '' };
+const last = { fireLabel: '', level: '', hits: -1, lvlId: -1, rec: '', ammo: -1, ammoMax: -1, score: -1, wind: NaN, time: -1, range: -1, capT: null, cap: '', fireLock: null, fireEmpty: null, zoom: '', breath: '', ring: -1, flight: -1, flightM: -1, tableLive: '', feedback: '' };
 function uiResetHUD(L) {
   last.level = ''; last.hits = -1; last.lvlId = -1; last.rec = ''; last.ammo = -1; last.ammoMax = -1; last.score = -1; last.wind = NaN; last.time = -1; last.range = -1;
   last.cap = ''; last.capT = null; last.fireLock = null; last.fireEmpty = null; last.ring = -1; last.flight = -1; last.tableLive = ''; last.feedback = '';
-  $('hudTime').hidden = !L.timeLimit; $('flightBar').hidden = true; $('flightLabel').hidden = true; $('feedback').textContent = ''; $('hint').hidden = true; $('hint').style.visibility = ''; hintKind = ''; clearTimeout(hintTimer); hintTimer = 0;
+  $('hudTime').hidden = !L.timeLimit; $('flightChip').hidden = true; $('feedback').textContent = ''; $('hint').hidden = true; $('hint').style.visibility = ''; hintKind = ''; clearTimeout(hintTimer); hintTimer = 0;
   $('hudLevelRec').hidden = true; $('hud').classList.toggle('nopips', mode !== 'level');
   const pips = $('ammoPips'); pips.innerHTML = ''; const n = Math.min(10, sess.ammo); for (let i = 0; i < n; i++) pips.appendChild(mkEl('i')); last.ammoMax = n;
   uiFrame();
@@ -2933,14 +2992,15 @@ function uiFrame() {
     $('btnBreath').style.borderColor = breath.phase === 'strain' ? 'var(--miss)' : breath.phase === 'release' ? 'var(--lock)' : '';
     $('btnBreath').style.background = breath.phase === 'hold' || breath.phase === 'strain' ? `conic-gradient(var(--breath) ${ring}%, var(--hud-bg) 0)` : '';
   }
-  /* flight bar */
-  if (bullet.active) { const f = Math.round(100 * clamp((simTime - bullet.tFire) / Math.max(bullet.t, 1e-6), 0, 1)); if (f !== last.flight) { last.flight = f; $('flightFill').style.width = f + '%'; } }
-  else if (last.flight >= 0) { last.flight = -1; $('flightBar').hidden = true; $('flightLabel').hidden = true; }
+  /* flight readout: the bar fills over the real time of flight, the metres tick up with the bullet; stays 300 ms after impact */
+  if (bullet.active) { const u = clamp((simTime - bullet.tFire) / Math.max(bullet.t, 1e-6), 0, 1), f = Math.round(100 * u), m = Math.min(Math.round(bullet.s), Math.round(rangeAt(Math.max(0, simTime - bullet.tFire))));
+    if (f !== last.flight) { last.flight = f; $('flightFill').style.width = f + '%'; } if (m !== last.flightM) { last.flightM = m; $('flightM').textContent = String(m); } }
+  else if (last.flight >= 0) { if (last.flight < 100) { last.flight = 100; $('flightFill').style.width = '100%'; $('flightM').textContent = String(Math.round(bullet.s)); } if (simTime >= flightHideAt) { last.flight = -1; $('flightChip').hidden = true; } }
   if (overlay === 'table') uiTableLive();
 }
 function uiOnFire() {
-  $('flightLabel').textContent = `${S.flight} ${fmtMil(bullet.t, 2)} с · ${Math.round(bullet.s)} ${S.m}`;
-  $('flightLabel').hidden = false; $('flightBar').hidden = false; $('flightFill').style.width = '0%'; last.flight = 0; last.fireLock = null;
+  $('flightLabel').innerHTML = `<span class="k">${S.flight.toUpperCase()}</span><span class="num">${fmtMil(bullet.t, 2)} с · <span id="flightM">0</span> ${S.m}</span>`;
+  $('flightChip').hidden = false; $('flightFill').style.width = '0%'; last.flight = 0; last.flightM = 0; last.fireLock = null;
 }
 function uiOnImpact() { last.fireLock = null; }
 function uiFireLock() { last.fireLock = null; last.fireEmpty = null; }
@@ -2949,7 +3009,7 @@ function uiZoom() { $('btnZoom').textContent = `${zoom}×`; }
 function hipToggle(on) {
   if (screen !== 'play' || phase === 'intro' || paused) return;   // never from the pause dim (button, key V and the hook agree)
   const v = on == null ? !hip : !!on; if (v === hip) return;
-  hip = v; hipT0 = wallNow; if (hip) { if (holdingBreath()) breathRelease(); sfx.hipOut(); } else sfx.hipIn();
+  hip = v; hipT0 = wallNow; if (hip) { if (holdingBreath()) breathRelease(); followEnd(true); sfx.hipOut(); } else sfx.hipIn();
   uiHip(); last.fireLock = null; uiFrame();
 }
 function uiHip() { $('btnHip').classList.toggle('on', hip); $('btnFire').classList.toggle('hip', hip); last.fireEmpty = null; last.fireLabel = ''; }
@@ -3482,6 +3542,12 @@ const RECIPES = {
     switch (kind) { case 'bottle': RECIPES.shatter(d); break; case 'balloon': RECIPES.pop(d); break; case 'sil': RECIPES.thud(d); break; case 'bird': case 'dive': RECIPES.whump(d); break; default: RECIPES.ring(d); }
   },
   whizz() { noise(0.06, 0.2, 'bandpass', 2000, 0, 1.5); },
+  whoosh(t) {   // bullet flight: a band-passed noise sweep falling from 2.4 kHz to 260 Hz over the time of flight, swelling then thinning out (longer shots = longer, deeper whoosh)
+    const dur = clamp(t || 0.3, 0.2, 2.2), at = actx.currentTime + 0.04, src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true; src.loopStart = 0; src.loopEnd = 1;
+    const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2.2; f.frequency.setValueAtTime(2400, at); f.frequency.exponentialRampToValueAtTime(260, at + dur);
+    const g = actx.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16 + 0.1 * Math.min(1, dur / 1.5), at + dur * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    src.connect(f); f.connect(g); g.connect(master); src.start(at, sfxRng() * 0.8); src.stop(at + dur + 0.02);
+  },
   bullChime() { tone('sine', 1319, 0, 0.22, 0.35); tone('sine', 1760, 0, 0.22, 0.35, 0.06); tone('triangle', 3520, 0, 0.04, 0.2); },
   streakStep(mult, record) { const f = [0, 0, 523, 659, 784][mult]; tone('sine', f, 0, 0.18, 0.3); tone('triangle', f, 0, 0.18, 0.15);
     if (mult === 4) tone('sine', 1047, 0, 0.18, 0.3, 0.05);
@@ -3535,10 +3601,10 @@ function state() {
   for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.mandatory && !T.alive) continue; const p = posAt(T, simTime), v = velAt(T, simTime);
     list.push({ id: T.id, kind: T.kind, d: T.d, x: p.x, y: p.y, vx: v.vx, vy: v.vy, w: T.w, h: T.h, alive: T.alive, mandatory: T.mandatory }); }
   return { screen, mode, levelIndex, wave, paused, tableOpen: overlay === 'table', phase, ammo: sess.ammo, score: sess.score, hits: sess.hits, misses: sess.misses, shots: sess.shots,
-    streak: sess.streak, mult: clamp(sess.streak, 1, 4), timeScale, cam: cam.on, timeLeft: sess.timeLeft, targets: list, aim: { az: aim.az, el: aim.el }, zoom, ppm: hip ? layout.w / HIP_FOV : ppm, wind,
+    streak: sess.streak, mult: clamp(sess.streak, 1, 4), timeScale, cam: cam.on, follow: follow.on, flightChip: !$('flightChip').hidden, timeLeft: sess.timeLeft, targets: list, aim: { az: aim.az, el: aim.el }, zoom, ppm: hip ? layout.w / HIP_FOV : ppm, wind,
     holdingBreath: holdingBreath(), breath: { phase: breath.phase, t: simTime - breath.t0 }, lastShot: sess.lastShot,
     challenges: sess.challenges.map((c) => ({ id: c.str, state: c.state })), gold: { active: sess.goldState === 1, tGold: sess.tGold }, perf: { retryMs: perf.retryMs, fps: perf.fps },
-    hip, dial, coins: save.coins, coinsEarned: save.coinsEarned, windTick: { on: windTick.on, mils: windTick.mils }, lrfLabels, hipView: { cx: layout.cx, cy: layout.cy, ppm: layout.w / HIP_FOV, w: layout.w, h: layout.h },
+    hip, dial, coins: save.coins, coinsEarned: save.coinsEarned, windTick: { on: windTick.on, mils: windTick.mils }, lrfLabels, hipView: { cx: layout.cx, cy: layout.cy, ppm: layout.w / HIP_FOV, w: layout.w, h: layout.h, R: layout.R, Rt: layout.Rt, Rb: layout.Rb },
     loadout: { rifle: RIFLE.id, scope: SCOPE.id, zooms: SCOPE.zooms.slice(), turret: SCOPE.turret, windTick: SCOPE.windTick, gear: { bipod: GEAR.bipod, breath: GEAR.breath, lrf: GEAR.lrf, anemo: GEAR.anemo, tracer: GEAR.tracer },
       swayMult: sway.mult, breathSweet: BREATH.sweet, breathCooldown: BREATH.cooldown, v0: RIFLE.v0, kWind: RIFLE.kWind, bolt: RIFLE.bolt, recoil: RIFLE.recoil, ammoMod: RIFLE.ammoMod, finish: COS.finish, reticle: save.loadout.reticle, palette: COS.palette },
     inv: { use_ammo: save.inv.use_ammo, use_second: save.inv.use_second }, usedAmmo: sess.usedAmmo, usedSecond: sess.usedSecond };
@@ -3558,6 +3624,7 @@ window.__sniper = {
     equip: (id) => { const ok = equipItem(id); if (ok) { if (screen === 'shop') buildShop(); if (screen === 'loadout') buildLoadout(); if (screen === 'menu') refreshMenu(); } return ok; }, owned: () => Object.keys(save.owned).filter((k) => save.owned[k]), save: () => save },
   hip: (on) => { hipToggle(on == null ? !hip : !!on); return hip; }, dial: (m) => { setDial(+m || 0); return dial; }, snapTo: (id) => snapToTarget(id), useConsumable,
   lobby: { next: () => { lobbyStep(1); return lobbyIdx; }, prev: () => { lobbyStep(-1); return lobbyIdx; }, index: () => lobbyIdx, rifles: RIFLES.map((r) => r.id) },
+  audio: { init: audioInit, ready: () => !!actx, play: (name, a, b) => { if (!actx || !RECIPES[name]) return false; RECIPES[name](a, b); return true; } },   // recipes run unguarded here so a test sees an exception
   validation: validateLevels()
 };
 
@@ -3571,7 +3638,7 @@ function frame(now) {
   if (layout.h > layout.w) { if (screen === 'play' && phase !== 'intro') togglePause(true); return; }   // portrait: rotate prompt is up, nothing runs
   if (screen === 'play') {
     if (paused) return;
-    updateCam(dtWall);
+    updateCam(dtWall); updateFollow(dtWall);
     let left = dtWall / 1000 * timeScale; while (left > 1e-9) { const dt = Math.min(0.016, left); left -= dt; simStep(dt); }
     sess.shown += (sess.score - sess.shown) * (1 - Math.exp(-dtWall / 80)); if (Math.abs(sess.score - sess.shown) < 0.5) sess.shown = sess.score;
     drawFrame(dtWall);
