@@ -808,7 +808,7 @@ const S = {
   /* economy & shop (SHOP-SPEC) */
   coin: 'жұлдыз', plusCoins: (n) => `+${fmt(n)} жұлдыз`, balance: 'Баланс', shop: 'Дүкен', loadout: 'Жабдық', toShop: 'Дүкенге ›',
   buy: 'Сатып алу', buyN: (n) => `Сатып алу (×${n})`, need: (n) => `Тағы ${fmt(n)} керек`, apply: 'Қолдану', inUse: 'Қолданылуда', ownedP: 'Иелікте', stock: (n) => `Қорда: ${n}`,
-  bought: 'Сатып алындың!', equipNow: 'Бірден қолдану', later: 'Кейін', newInShop: (nm, p) => `Дүкенде жаңа зат: ${nm} (${p})`, free: 'Бастапқы',
+  bought: 'Сатып алдың!', equipNow: 'Бірден қолдану', later: 'Кейін', newInShop: (nm, p) => `Дүкенде жаңа зат: ${nm} (${p})`, free: 'Бастапқы',
   hip: 'КӨРІНІС', enterScope: 'Прицелге кір', turret: 'Турель', gustWarn: 'Екпін!', dialClamp: '×12: ең көбі 8 мил',
   plusAmmo: (n) => `+3 оқ (қорда ${n})`, second: 'Жалғастыру (+3 оқ)', cUsed: 'Қолданылды', rifleBars: ['Жылдамдық', 'Затвор', 'Тепкі'],
   loSec: { rifle: 'Мылтық', scope: 'Прицел', cos: 'Әшекей', gear: 'Жабдық', use: 'Бір реттік' }, notOwned: 'Иелікте емес', zoomsOf: (z) => z.map((x) => '×' + x).join(' / '),
@@ -1300,7 +1300,7 @@ function spawnPopup(az, el, text, tag, bull, head, hh, coins) { const p = POPS[p
 
 /* -- coins («жұлдыз», SHOP-SPEC §1): balance + lifetime; the top bar counts up, a «+N» rides the hit popup */
 function earnCoins(n, key) {
-  n = Math.round(n); if (n <= 0) return 0;
+  n = Math.round(+n) || 0; if (n <= 0) return 0;   // junk never reaches the balance (NaN would survive JSON as null and wipe it on reload)
   save.coins += n; save.coinsEarned += n;
   if (key && sess.coins[key] != null) { sess.coins[key] += n; sess.coinsRun += n; }
   coinBump(); return n;
@@ -1725,6 +1725,8 @@ function resumeSecond() {
   if (!resData || !resData.secondAvail || save.inv.use_second <= 0 || sess.usedSecond) return;
   save.inv.use_second--; sess.usedSecond = true; scheduleSave();
   resTimers.forEach(clearTimeout); resTimers = []; resEndState = true; resAnim.on = false; coinFx.hold = 0;
+  /* the sim clock kept ticking on the result screen (far «ding»): shift the level clocks so that time never counts against the limit, «under» or the gold target */
+  const gap = Math.max(0, simTime - resSimAt); levelClock0 += gap; sess.t0 += gap; if (goldT && sess.goldState === 1) goldT.scaleIn += gap; if (breath.phase !== 'normal') { breath.phase = 'normal'; breath.m = 1; uiBreath(); }
   go('play'); phase = 'aim'; endAt = -1; endKind = ''; sess.ammo += 3; chFail('onlyN'); lockUntil = simTime + 0.3;
   uiFireLock(); uiTurret(); uiFrame(); startWindBed(); banner(`+3 ${S.ammo.toLowerCase()}`); sfx.wave();
 }
@@ -2412,7 +2414,7 @@ function onPointerMove(e) {
   if (drag.dead) { drag.moved += Math.hypot(dx, dy); if (drag.moved < 3) return; drag.dead = false; }
   drag.x = e.clientX; drag.y = e.clientY;
   if (paused || phase === 'intro') return;
-  const pp = cam.on ? ppm * cam.S : ppm, f = sensF();
+  const pp = hip ? layout.w / HIP_FOV : cam.on ? ppm * cam.S : ppm, f = sensF();   // the wide view pans 1:1 with the scene it shows
   aimTarget.az = clamp(aimTarget.az + dx / pp * f, -40, 40); aimTarget.el = clamp(aimTarget.el - dy / pp * f, -20, 32);
 }
 function onPointerUp(e) { if (drag.on && e.pointerId === drag.id) { drag.on = false; drag.id = -1; if (hip && drag.dead && e.type === 'pointerup' && !paused && phase !== 'intro') snapToPoint(e.clientX, e.clientY); } }
@@ -2524,7 +2526,7 @@ function go(name) {
   if (!SCREENS[name]) return;
   guardClicks();
   if (screen === 'play' && name !== 'play') { stopWindBed(); paused = false; $('pauseOverlay').hidden = true; toggleTable(false); }
-  if (screen === 'result' && name !== 'result') { resTimers.forEach(clearTimeout); resTimers = []; resEndState = true; resAnim.on = false; }   // no ceremony leaks onto the next screen
+  if (screen === 'result' && name !== 'result') { resTimers.forEach(clearTimeout); resTimers = []; resEndState = true; resAnim.on = false; coinFx.hold = 0; }   // no ceremony leaks onto the next screen; the held end bonus lands in the top bar
   for (const id of APP_OVERLAYS) $(id).hidden = true;
   for (const k in SCREENS) $(SCREENS[k]).hidden = k !== name;
   screen = name; overlay = 'none'; $('app').classList.toggle('on-menu', name === 'menu');
@@ -2702,7 +2704,7 @@ function uiFireLock() { last.fireLock = null; last.fireEmpty = null; }
 function uiZoom() { $('btnZoom').textContent = `${zoom}×`; }
 /* -- hip view («Кең көрініс», SHOP-SPEC §4) */
 function hipToggle(on) {
-  if (screen !== 'play' || phase === 'intro') return;
+  if (screen !== 'play' || phase === 'intro' || paused) return;   // never from the pause dim (button, key V and the hook agree)
   const v = on == null ? !hip : !!on; if (v === hip) return;
   hip = v; hipT0 = wallNow; if (hip) { if (holdingBreath()) breathRelease(); sfx.hipOut(); } else sfx.hipIn();
   uiHip(); last.fireLock = null; uiFrame();
@@ -2711,7 +2713,8 @@ function uiHip() { $('btnHip').classList.toggle('on', hip); $('btnFire').classLi
 /* tap-to-snap: the tapped point becomes the aim and the scope closes in (200 ms) */
 function snapToPoint(x, y) {
   if (!hip) return;
-  const pp = layout.w / HIP_FOV; aim.az = aimTarget.az = clamp(aim.az + (x - layout.cx) / pp, -40, 40); aim.el = aimTarget.el = clamp(aim.el - (y - layout.cy) / pp, -20, 32);
+  /* map through the view actually on screen (V: last drawn centre/scale, incl. the 200 ms ease, recoil kick and a bullet-cam centre), so the tapped point is what lands under the crosshair */
+  const pp = V.pp; aim.az = aimTarget.az = clamp(V.az + (x - layout.cx - V.shx) / pp, -40, 40); aim.el = aimTarget.el = clamp(V.el - (y - layout.cy - V.shy) / pp, -20, 32);
   hipToggle(false);
 }
 function snapToTarget(id) { const T = targetById(id); if (!T) return false; const p = posAt(T, simTime); aim.az = aimTarget.az = 1000 * p.x / T.d; aim.el = aimTarget.el = 1000 * p.y / T.d; hipToggle(false); return true; }
@@ -2719,7 +2722,7 @@ function snapToTarget(id) { const T = targetById(id); if (!T) return false; cons
 function setDial(v, click) {
   if (!SCOPE.turret) { dial = 0; uiTurret(); return; }
   const max = zoom >= 12 ? DIAL_MAX_X12 : DIAL_MAX, nv = clamp(Math.round(v / DIAL_STEP) * DIAL_STEP, 0, max);
-  if (click) { if (nv === dial) { if (v > max) banner(S.dialClamp); sfx.deny(); return; } sfx.dial(); }
+  if (click) { if (paused) return; if (nv === dial) { if (v > max) banner(S.dialClamp); sfx.deny(); return; } sfx.dial(); }
   dial = nv; uiTurret(); last.range = -1;
 }
 function uiTurret() { const on = SCOPE.turret && screen === 'play'; $('hudTurret').hidden = !on; $('btnDialUp').hidden = !SCOPE.turret; $('btnDialDown').hidden = !SCOPE.turret; if (on) $('hudTurret').querySelector('.v').textContent = fmtMil(dial, 1); }
@@ -2792,14 +2795,14 @@ function togglePause(force) {
   const p = force == null ? !paused : force; if (p === paused) return;
   if (p && overlay === 'table') toggleTable(false);   // close the sheet
   paused = p; $('pauseOverlay').hidden = !p; overlay = p ? 'pause' : 'none'; $('hint').style.visibility = p ? 'hidden' : '';   // a hint card never shows through the dim
-  if (p) { const b = $('btnPauseAmmo'), can = save.inv.use_ammo > 0 && !sess.usedAmmo; b.hidden = !can; if (can) b.textContent = S.plusAmmo(save.inv.use_ammo); }
+  if (p) { const b = $('btnPauseAmmo'), can = save.inv.use_ammo > 0 && !sess.usedAmmo && phase !== 'ending' && phase !== 'ended'; b.hidden = !can; if (can) b.textContent = S.plusAmmo(save.inv.use_ammo); }   // not once the outcome is decided: the level would still end «Оқ таусылды»
   if (p) { audioSuspend(); if (holdingBreath()) breathRelease(); } else audioResume();
 }
 
 /* -- result screen & ceremony (§8.B7) */
-let resTimers = [], resData = null, resEndState = false;
+let resTimers = [], resData = null, resEndState = false, resSimAt = 0;   // resSimAt: sim clock when the result screen opened (resumeSecond shifts the level clocks by the time spent there)
 function showResult(res) {
-  resData = res; resEndState = false; resTimers.forEach(clearTimeout); resTimers = [];
+  resData = res; resEndState = false; resTimers.forEach(clearTimeout); resTimers = []; resSimAt = simTime;
   const L = level, fail = !res.clear;
   $('resTop').textContent = mode === 'level' ? `${S.level} ${L.id}` : mode === 'endless' ? S.endless : S.daily;   // name under the title
   const bestVal = mode === 'level' ? save.best[levelIndex] : mode === 'endless' ? save.endless.best : save.daily.best;
@@ -2923,7 +2926,7 @@ function afterEquip(slot) {   // everything derived from the loadout is rebuilt 
   if (screen === 'play') drawFrame(0);
 }
 function buyItem(id) {   // pure transaction; false when not affordable / already owned
-  const it = ITEM_BY_ID[id]; if (!it || save.coins < it.price || (it.cat !== 'use' && isOwned(id))) return false;
+  const it = ITEM_BY_ID[id]; if (!it || save.coins < it.price || (it.cat !== 'use' && isOwned(id)) || (it.cat === 'use' && (save.inv[id] || 0) >= 99)) return false;   // a full stack (99) is not sold again
   save.coins -= it.price;
   if (it.cat === 'use') save.inv[id] = Math.min(99, (save.inv[id] || 0) + 1); else save.owned[id] = 1;
   if (it.cat === 'gear') applyLoadout();
@@ -3012,7 +3015,7 @@ function buildLoadout() {
 /* -- consumables from pause / fail (SHOP-SPEC §2.4) */
 function useConsumable(id) {
   if (id === 'use_ammo') {
-    if (screen !== 'play' || !paused || save.inv.use_ammo <= 0 || sess.usedAmmo || phase === 'intro') return false;
+    if (screen !== 'play' || !paused || save.inv.use_ammo <= 0 || sess.usedAmmo || phase === 'intro' || phase === 'ending' || phase === 'ended') return false;
     save.inv.use_ammo--; sess.usedAmmo = true; sess.ammo += 3; chFail('onlyN'); scheduleSave(); $('btnPauseAmmo').hidden = true;
     last.fireEmpty = null; uiFrame(); sfx.wave(); return true;
   }
@@ -3285,6 +3288,7 @@ function frame(now) {
 /* -- viewer hot-update hook (CONTRACT §2) */
 function start(saved) {
   loadSave(); buildHowto(); buildTable(); refreshSettings(); refreshMute(); bindInput(); bindLobby(); resize(); ensureAtlas(); uiCoins(true); uiTurret();
+  $('coinBar').addEventListener('animationend', () => $('coinBar').classList.remove('bump'));   // else the bump replays every time the bar re-appears (display:none → flex restarts the animation)
   window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 50));
   document.addEventListener('visibilitychange', () => { if (document.hidden) { if (screen === 'play' && phase !== 'intro') togglePause(true); writeSave(); } else { lastWall = performance.now(); } });
   window.addEventListener('pagehide', writeSave);
