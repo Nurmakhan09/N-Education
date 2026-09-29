@@ -1065,30 +1065,49 @@ function genWave(n, opts) {
 }
 
 /* ==== 5. SAVE ==== */
-const DEFAULTS = () => ({ v: 1, unlocked: 1, stars: Array(12).fill(0), best: Array(12).fill(0), medals: Array(12).fill(0),
+/* Schema v2 (SHOP-SPEC §1): coins, lifetime coinsEarned, owned set, loadout ids, consumable inventory, shop bookkeeping. */
+const DEFAULTS = () => ({ v: 2, unlocked: 1, stars: Array(12).fill(0), best: Array(12).fill(0), medals: Array(12).fill(0),
   records: { range: 0, streak: 0, acc: 0, hits: 0 }, rankSeen: 0, hintsSeen: { hold: 0, table: 0, lead: 0, bird: 0, wind: 0 },
-  daily: { date: 0, best: 0, attempts: 0 }, endless: { best: 0, bestWave: 0 }, reticle: 0, mute: 0, vibe: 1, sens: 1, hand: 0 });
+  daily: { date: 0, best: 0, attempts: 0, coinsDone: 0 }, endless: { best: 0, bestWave: 0 }, mute: 0, vibe: 1, sens: 1, hand: 0,
+  coins: 0, coinsEarned: 0, owned: ownedSet(DEFAULT_OWNED), loadout: { rifle: 'rifle_svd', scope: 'scope_std', finish: 'finish_default', reticle: 'ret_classic', palette: 'pal_default' },
+  inv: { use_ammo: 0, use_second: 0 }, shopSeen: 0 });
+function ownedSet(list) { const o = {}; for (const id of list) o[id] = 1; return o; }
 let save = DEFAULTS(), saveTimer = 0, storageOk = true;
 function loadSave() {
-  const d = DEFAULTS(); let raw = null;
-  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { storageOk = false; }
+  const d = DEFAULTS(); let raw = null, fromV1 = false;
+  try { raw = localStorage.getItem(SAVE_KEY); if (!raw) { raw = localStorage.getItem(SAVE_KEY_V1); fromV1 = !!raw; } } catch (e) { storageOk = false; }
   if (raw) {
     try {
       const o = JSON.parse(raw);
       /* finite + clamped (JSON.parse: 1e999 → Infinity) */
       const num = (v, def, lo, hi) => Number.isFinite(v) ? clamp(Math.round(v), lo, hi) : def;
-      const BIG = 1e7, LIM = { unlocked: 12, rankSeen: 3, reticle: 2, mute: 1, vibe: 1, sens: 2, hand: 1, range: 1500, streak: 1e4, acc: 100, hits: BIG, hold: 1, table: 1, lead: 1, bird: 1, wind: 1, date: 99999999, best: BIG, attempts: 1e6, bestWave: 1e4 };
+      const BIG = 1e7, LIM = { unlocked: 12, rankSeen: 3, mute: 1, vibe: 1, sens: 2, hand: 1, range: 1500, streak: 1e4, acc: 100, hits: BIG, hold: 1, table: 1, lead: 1, bird: 1, wind: 1, date: 99999999, best: BIG, attempts: 1e6, bestWave: 1e4, coinsDone: 1, coins: BIG, coinsEarned: BIG, shopSeen: BIG, use_ammo: 99, use_second: 99 };
       if (o && typeof o === 'object') {
-        for (const k of ['unlocked', 'rankSeen', 'reticle', 'mute', 'vibe', 'sens', 'hand']) d[k] = num(o[k], d[k], 0, LIM[k]);
+        for (const k of ['unlocked', 'rankSeen', 'mute', 'vibe', 'sens', 'hand']) d[k] = num(o[k], d[k], 0, LIM[k]);
         for (let i = 0; i < 12; i++) { d.stars[i] = num(o.stars && o.stars[i], 0, 0, 3); d.best[i] = num(o.best && o.best[i], 0, 0, BIG); d.medals[i] = num(o.medals && o.medals[i], 0, 0, 7); }
         for (const grp of ['records', 'hintsSeen', 'daily', 'endless']) if (o[grp] && typeof o[grp] === 'object') for (const k in d[grp]) d[grp][k] = num(o[grp][k], d[grp][k], 0, LIM[k]);
+        const isV1 = fromV1 || !(Number.isFinite(o.v) && o.v >= 2);
+        if (isV1) {
+          /* v1 → v2: coins from the stars and hits already earned; the old star-threshold reticles become owned */
+          let st = 0; for (let i = 0; i < 12; i++) st += d.stars[i];
+          d.coins = d.coinsEarned = 20 * st + d.records.hits;
+          if (st >= 12) d.owned.ret_thin = 1; if (st >= 24) d.owned.ret_green = 1;
+          const ret = num(o.reticle, 0, 0, 2); d.loadout.reticle = ['ret_classic', 'ret_thin', 'ret_green'][ret];
+        } else {
+          d.coins = num(o.coins, 0, 0, LIM.coins); d.coinsEarned = Math.max(d.coins, num(o.coinsEarned, 0, 0, LIM.coinsEarned)); d.shopSeen = num(o.shopSeen, 0, 0, LIM.shopSeen);
+          if (o.owned && typeof o.owned === 'object') for (const id in o.owned) if (ITEM_BY_ID[id] && o.owned[id]) d.owned[id] = 1;
+          if (o.inv && typeof o.inv === 'object') for (const k in d.inv) d.inv[k] = num(o.inv[k], 0, 0, LIM[k]);
+          if (o.loadout && typeof o.loadout === 'object') for (const k in d.loadout) { const id = o.loadout[k]; if (typeof id === 'string' && ITEM_BY_ID[id] && ITEM_BY_ID[id].cat === (k === 'finish' || k === 'reticle' || k === 'palette' ? 'cos' : k)) d.loadout[k] = id; }
+        }
+        /* a loadout slot may only hold an owned item */
+        for (const k in d.loadout) if (!d.owned[d.loadout[k]]) d.loadout[k] = DEFAULTS().loadout[k];
       }
     } catch (e) { /* corrupt JSON → defaults */ }
   }
-  if (d.daily.date !== dateKey()) { d.daily = { date: dateKey(), best: 0, attempts: 0 }; }
+  if (d.daily.date !== dateKey()) { d.daily = { date: dateKey(), best: 0, attempts: 0, coinsDone: 0 }; }
   let lastStar = -1; for (let i = 0; i < 12; i++) if (d.stars[i] > 0) lastStar = i;
   d.unlocked = clamp(Math.max(d.unlocked, lastStar + 2), 1, 12);   // grid and Start agree
-  save = d;
+  save = d; applyLoadout();
 }
 function writeSave() { saveTimer = 0; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { storageOk = false; } }
 function scheduleSave() { if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(writeSave, 250); }
