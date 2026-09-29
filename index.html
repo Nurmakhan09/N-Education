@@ -79,26 +79,55 @@ canvas { display: block }
 
 /* -- main menu -- */
 #menuCanvas { position: absolute; inset: 0; width: 100%; height: 100% }
-.menu-col { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding-top: calc(70px + var(--sat)); padding-bottom: var(--sab); box-sizing: border-box; overflow-y: auto; touch-action: pan-y }
-.menu-col > * { flex: none }   /* short viewports scroll instead of squashing the fixed-height blocks */
-.title { margin: 0; font-size: 44px; font-weight: 700; letter-spacing: .06em; line-height: 1.1; text-shadow: 0 2px 12px var(--shadow) }
-.subtitle { margin-top: 6px; font-size: 14px; color: var(--muted) }
-.records { margin-top: 44px; width: 320px; max-width: calc(100% - 32px); background: var(--hud-bg); border-radius: 14px; padding: 8px 14px 10px; box-sizing: border-box }
-.records .cap { font-size: 12px; color: var(--muted); margin-bottom: 4px }
-.records .r { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 500; line-height: 20px }
-.records .r span:first-child { color: var(--muted); font-size: 12px; font-weight: 400 }
-.rank-wrap { margin-top: 18px; width: 320px; max-width: calc(100% - 32px); position: relative; height: 56px }
-#rankLine { font-size: 15px; font-weight: 500; line-height: 24px; text-shadow: 0 1px 6px var(--shadow) }
-.rank-bar { position: absolute; left: 30px; top: 32px; width: 200px; height: 6px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
+#btnSettings { position: absolute; right: 72px; top: var(--sat); width: 48px; height: 48px; border-radius: 12px; z-index: 5; display: flex; align-items: center; justify-content: center; color: var(--text); background: var(--hud-bg) }
+#btnSettings svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round }
+#app.on-menu #coinBar { display: none }   /* the menu shows the balance on the «Дүкен» button */
+/* lobby left, records / rank / buttons right; nothing scrolls (landscape-only game, desktop uses the same halves) */
+.menu-col { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; column-gap: 24px; padding: calc(10px + var(--sat)) 32px calc(6px + var(--sab)); box-sizing: border-box; overflow: hidden }
+.lobby { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; align-items: center; min-height: 0; width: 100%; max-width: 460px; justify-self: center }
+.title-row { display: flex; align-items: baseline; gap: 10px; width: 100%; white-space: nowrap }
+.title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: .06em; line-height: 1.15; text-shadow: 0 2px 12px var(--shadow) }
+.subtitle { font-size: 12px; color: var(--muted) }
+.stage { position: relative; width: 100%; flex: 1 1 auto; min-height: 96px; max-height: 300px; margin-top: 4px; touch-action: pan-y }
+#rifleCanvas { position: absolute; inset: 0; width: 100%; height: 100%; animation: stageIdle 6s ease-in-out infinite; transform-origin: 50% 60% }
+@keyframes stageIdle { 0%, 100% { transform: rotate(-.7deg) translateY(2px) } 50% { transform: rotate(.7deg) translateY(-2px) } }
+@media (prefers-reduced-motion: reduce) { #rifleCanvas { animation: none } }
+.stage .arrow { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 24px; background: var(--hud-bg); border: 1px solid var(--line); font-size: 30px; line-height: 1; color: var(--text) }
+.stage .arrow.r { left: auto; right: 0 }
+.stage .arrow:active { background: var(--btn-down) }
+.rname { margin-top: 2px; font-size: 16px; font-weight: 600; text-shadow: 0 1px 6px var(--shadow); white-space: nowrap }
+.rstats { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 2px; margin-top: 2px }
+.rstats .bar { display: grid; grid-template-columns: 148px 1fr; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); height: 14px; white-space: nowrap }
+.rstats .bar i { display: block; height: 5px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
+.rstats .bar i b { display: block; height: 100%; background: var(--accent); border-radius: 3px }
+.rstats .bar span:last-child { display: none }
+.rlocked { display: flex; align-items: center; gap: 12px; margin-top: 2px; height: 48px }
+.rlocked .price { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 500; color: var(--accent-2) }
+#btnRifleShop { height: 48px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--ink-on-accent); font-size: 14px; font-weight: 500; white-space: nowrap }
+.dots { display: flex; gap: 6px; margin-top: 4px; height: 12px; align-items: center }
+.dots i { display: block; width: 8px; height: 8px; border-radius: 4px; border: 1.5px solid var(--muted); box-sizing: border-box }
+.dots i.on { background: var(--muted) }
+.dots i.cur { border-color: var(--accent); background: var(--accent); width: 10px; height: 10px }
+.side { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 40px; box-sizing: border-box; min-height: 0; width: 100%; max-width: 380px; justify-self: center; gap: 4px }   /* starts under the settings / mute buttons */
+.records { width: 100%; background: var(--hud-bg); border-radius: 14px; padding: 5px 12px 6px; box-sizing: border-box }
+.records .cap { font-size: 11px; color: var(--muted); margin-bottom: 2px }
+.records .rgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; row-gap: 2px }
+.records .r { display: flex; flex-direction: column; font-size: 14px; font-weight: 500; line-height: 15px; white-space: nowrap }
+.records .r span:first-child { color: var(--muted); font-size: 11px; font-weight: 400 }
+.rank-wrap { width: 100%; position: relative; height: 30px }
+#rankLine { font-size: 14px; font-weight: 500; line-height: 18px; text-shadow: 0 1px 6px var(--shadow); white-space: nowrap }
+.rank-bar { position: absolute; left: 0; top: 22px; width: 100%; height: 6px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
 #rankFill { height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width .4s cubic-bezier(.33,1,.68,1) }
-#btnGear { position: absolute; right: 0; top: 4px; width: 88px; height: 48px; border-radius: 16px; background: var(--btn); border: 1px solid var(--line); font-size: 13px; font-weight: 500 }
-.menu-shop { margin-top: 10px; width: 320px; max-width: calc(100% - 32px) }
-#btnShop { position: relative; width: 100%; max-width: none; height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px }
-#btnShop .coinbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: var(--accent-2); padding: 3px 8px; border-radius: 10px; background: var(--btn) }
-#btnShop .dot { position: absolute; right: 10px; top: 10px; width: 10px; height: 10px; border-radius: 5px; background: var(--danger); box-shadow: 0 0 0 2px var(--panel) }
-.menu-btns { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; width: 100% }
-.footer { margin-top: 26px; font-size: 12px; color: var(--muted) }
-.desktop-hint { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; padding: 0 16px }
+.menu-btns { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 2px }
+.menu-btns .btn { width: 100%; max-width: none; height: 48px; font-size: 16px }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.btn-grid .btn { font-size: 15px; padding: 0 6px; box-sizing: border-box; white-space: nowrap }
+#btnShop { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px }
+#btnShop .coinbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--accent-2); padding: 2px 7px; border-radius: 10px; background: var(--btn) }
+#btnShop .dot { position: absolute; right: 8px; top: 8px; width: 10px; height: 10px; border-radius: 5px; background: var(--danger); box-shadow: 0 0 0 2px var(--panel) }
+.footer { grid-column: 1 / -1; grid-row: 2; align-self: end; text-align: center; font-size: 12px; color: var(--muted); margin-top: 4px }
+.desktop-hint { grid-column: 1 / -1; grid-row: 3; font-size: 12px; color: var(--muted); text-align: center; padding: 0 16px }
+@media (min-height: 600px) { .title { font-size: 40px } .subtitle { font-size: 14px } .rname { font-size: 20px } .side { gap: 12px; justify-content: center; padding-top: 0 } .menu-btns { gap: 12px } .btn-grid { gap: 12px } .menu-btns .btn { height: 56px; font-size: 18px } .rank-wrap { height: 44px } .rank-bar { top: 30px } .records .r { line-height: 20px } }
 @media (prefers-reduced-motion: reduce) { #rankFill { transition: none } }
 
 /* -- how-to card glyphs -- */
@@ -147,11 +176,11 @@ canvas { display: block }
 .lo-body { position: absolute; top: calc(56px + var(--sat)); bottom: 0; left: 0; right: 0; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; padding: 0 16px calc(12px + var(--sab)); box-sizing: border-box }
 .lo-cap { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px }
 .lo-row { display: flex; gap: 10px; flex-wrap: wrap }
-.lo-card { flex: 1 1 180px; max-width: 260px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px }
+.lo-card { flex: 1 1 220px; max-width: 300px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px }
 .lo-card.eq { border-color: var(--accent) }
 .lo-card .nm { font-size: 15px; font-weight: 600 }
 .lo-card .sub { font-size: 12px; color: var(--muted) }
-.lo-card .bar { display: grid; grid-template-columns: 74px 1fr 34px; align-items: center; gap: 6px; font-size: 12px; color: var(--muted) }
+.lo-card .bar { display: grid; grid-template-columns: 124px 1fr 0px; white-space: nowrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted) }
 .lo-card .bar i { display: block; height: 6px; border-radius: 3px; background: var(--line-strong); overflow: hidden }
 .lo-card .bar i b { display: block; height: 100%; background: var(--accent); border-radius: 3px }
 .lo-card .bar span:last-child { text-align: right; color: var(--text) }
@@ -167,7 +196,7 @@ canvas { display: block }
 .lo-line .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .lo-line .s { font-size: 12px; color: var(--muted); white-space: nowrap }
 .lo-line.off { opacity: .55 }
-#btnLoShop { position: absolute; right: 16px; top: 4px; height: 48px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--ink-on-accent); font-size: 15px; font-weight: 500 }
+#btnLoShop { position: absolute; right: 176px; top: 4px; height: 48px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--ink-on-accent); font-size: 15px; font-weight: 500 }
 .lc-gear { display: block; margin: 6px auto 0; height: 48px; padding: 0 16px; border-radius: 12px; font-size: 14px; color: var(--accent); background: var(--btn) }
 
 /* -- level select -- */
@@ -337,7 +366,7 @@ canvas { display: block }
 
 /* -- result screen -- */
 .res-wrap { position: absolute; inset: 0; padding: var(--sat) 16px var(--sab); box-sizing: border-box; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; align-items: center }
-.res-top { width: 100%; height: 56px; display: flex; align-items: center; justify-content: space-between; padding-right: 60px; box-sizing: border-box }
+.res-top { width: 100%; height: 56px; display: flex; align-items: center; justify-content: space-between; padding-right: 170px; box-sizing: border-box }   /* clear of the coin bar + mute */
 .res-top .l { font-size: 18px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0 }
 .res-top .r { font-size: 14px; color: var(--muted); white-space: nowrap; padding-left: 8px }
 .res-title { font-size: 32px; font-weight: 700; margin-top: 12px; text-align: center }
@@ -361,10 +390,10 @@ canvas { display: block }
 .res-score { font-size: 44px; font-weight: 700; margin-top: 8px; line-height: 1 }
 .res-bonus { font-size: 12px; color: var(--muted); margin: 6px 0 10px; height: 16px; opacity: 0; transition: opacity .3s }
 .res-bonus.show { opacity: 1 }
-.res-coins { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; font-weight: 600; color: var(--coin); margin-top: 6px; min-height: 20px; opacity: 0; transition: opacity .3s }
+.res-coins { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; font-weight: 600; color: var(--coin); margin-top: 6px; min-height: 20px; opacity: 0; transition: opacity .3s; white-space: nowrap; max-width: 100% }
 .res-coins.show { opacity: 1 }
-.res-coins .bd { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px }
-.res-teaser { margin-top: 6px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--btn); border: 1px solid var(--accent); color: var(--accent-2); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; animation: chipIn .25s var(--back) }
+.res-coins .bd { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; flex: 0 1 auto; min-width: 0 }
+.res-teaser { margin-top: 6px; height: 48px; padding: 0 14px; border-radius: 12px; background: var(--btn); border: 1px solid var(--accent); color: var(--accent-2); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; animation: chipIn .25s var(--back) }
 .res-teaser:active { background: var(--btn-down) }
 /* three auto margins share the slack */
 .res-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 358px; margin-top: auto; flex-shrink: 0 }
@@ -387,7 +416,6 @@ canvas { display: block }
 @media (max-width: 380px) { .res-sec .btn { font-size: 15px } }
 @media (max-width: 374px) { .res-sec .btn { font-size: 14px } }
 @media (max-width: 340px) { .res-sec .btn { font-size: 13px } }
-.unlock-banner { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(150px + var(--sab)); background: var(--panel-2); border: 1px solid var(--accent); border-radius: 12px; padding: 14px 16px; min-height: 48px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; font-weight: 500; z-index: 20 }
 
 /* rank ceremony */
 .rank-card { width: 326px; text-align: center; padding: 22px 16px }
@@ -402,26 +430,13 @@ canvas { display: block }
   #hudWind { left: 140px; right: auto; text-align: left }
   .res-ch .chip { padding: 6px 4px; gap: 2px; line-height: 1.15 }   /* two lines fit in 64 px */
   #hudChallenges { top: calc(80px + var(--sat)) }
-  .menu-col { padding-top: calc(24px + var(--sat)) }
-  .records { margin-top: 12px } .menu-btns { margin-top: 10px; gap: 8px } .btn { height: 48px }
-}
-/* -- main menu, phone landscape: title + records + rank on the left, buttons on the right, nothing scrolls -- */
-@media (orientation: landscape) and (max-height: 560px) {
-  .menu-col { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto auto 1fr; column-gap: 24px; padding: calc(12px + var(--sat)) 32px calc(6px + var(--sab)); align-items: start; justify-items: center; overflow: hidden }
-  .menu-col .title { grid-column: 1; grid-row: 1; font-size: 40px; margin: 0 }
-  .menu-col .subtitle { grid-column: 1; grid-row: 2; margin-top: 0 }
-  .records { grid-column: 1; grid-row: 3; margin-top: 8px; width: 100%; max-width: 340px; padding: 6px 14px 8px }
-  .rank-wrap { grid-column: 1; grid-row: 4; margin-top: 6px; width: 100%; max-width: 340px }
-  .menu-shop { grid-column: 1; grid-row: 5; margin-top: 6px; width: 100%; max-width: 340px }
-  .menu-btns { grid-column: 2; grid-row: 1 / 6; align-self: center; width: 100%; max-width: 340px; margin-top: 0; gap: 10px }
-  .menu-btns .btn { height: 48px }
-  .footer, .desktop-hint { grid-column: 1 / -1; grid-row: 6; align-self: end; margin-top: 4px }
+  .btn { height: 48px }
 }
 /* -- result screen, phone landscape: two columns (left: title/stars/score, right: stats/medals), buttons in one row -- */
 .res-left, .res-right { display: contents }
 @media (orientation: landscape) and (max-height: 560px) {
   .res-wrap { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 44px minmax(0, 1fr) auto; column-gap: 20px; padding: var(--sat) 24px calc(6px + var(--sab)); overflow: hidden; align-items: stretch }
-  .res-top { grid-column: 1 / -1; height: 44px; padding-right: 56px }
+  .res-top { grid-column: 1 / -1; height: 44px; padding-right: 170px }
   .res-left { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0 }
   .res-right { display: flex; flex-direction: column; justify-content: center; min-height: 0; width: 100%; max-width: 380px; justify-self: center }
   .res-title { font-size: 24px; margin-top: 0 }
@@ -433,7 +448,7 @@ canvas { display: block }
   .res-score { font-size: 36px; margin-top: 2px }
   .res-bonus { margin: 4px 0 0 }
   .res-coins { margin-top: 2px; font-size: 14px; min-height: 18px } .res-coins .bd { max-width: 200px }
-  .res-teaser { margin-top: 4px; height: 34px; font-size: 12px }
+  .res-teaser { margin-top: 2px; height: 48px; font-size: 12px }
   .res-stats { margin-top: 0; max-width: none; gap: 8px }
   .res-ch { margin: 8px 0 0; min-height: 56px; max-width: none }
   .res-ch .chip { padding: 6px 4px; gap: 2px; line-height: 1.15; font-size: 11px }
@@ -472,32 +487,47 @@ canvas { display: block }
   <!-- ==== MAIN MENU ==== -->
   <section id="screenMenu" class="screen" data-testid="screen-menu">
     <canvas id="menuCanvas"></canvas>
+    <button id="btnSettings" data-testid="btn-settings" aria-label="Баптаулар"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <div class="menu-col">
-      <h1 class="title">ҚЫРАН КӨЗ</h1>
-      <div class="subtitle">Снайпер ойыны</div>
-      <div class="records">
-        <div class="cap">Рекордтар</div>
-        <div class="r"><span>Ең ұзақ атыс</span><span id="recRange">—</span></div>
-        <div class="r"><span>Ең ұзақ серия</span><span id="recStreak">—</span></div>
-        <div class="r"><span>Ең жақсы дәлдік</span><span id="recAcc">—</span></div>
-        <div class="r"><span>Барлық тигізу</span><span id="recHits">—</span></div>
+      <!-- lobby: the equipped rifle on a stage; ‹ › and swipes cycle every rifle -->
+      <div class="lobby">
+        <div class="title-row"><h1 class="title">ҚЫРАН КӨЗ</h1><span class="subtitle">Снайпер ойыны</span></div>
+        <div class="stage" id="stage" data-testid="lobby-stage">
+          <canvas id="rifleCanvas"></canvas>
+          <button class="arrow" id="btnRiflePrev" data-testid="btn-rifle-prev" aria-label="Алдыңғы мылтық">‹</button>
+          <button class="arrow r" id="btnRifleNext" data-testid="btn-rifle-next" aria-label="Келесі мылтық">›</button>
+        </div>
+        <div class="rname" id="rifleName" data-testid="lobby-rifle-name">СВД (7,62)</div>
+        <div class="rstats" id="rifleStats"></div>
+        <div class="rlocked" id="rifleLocked" hidden><span class="price"><svg class="coin sm"><use href="#coinSym"/></svg><span id="rifleLockPrice" class="num">250</span></span><button id="btnRifleShop" data-testid="btn-rifle-shop">Дүкенде қарау ›</button></div>
+        <div class="dots" id="rifleDots"></div>
       </div>
-      <div class="rank-wrap">
-        <div id="rankLine">Үйренуші: 0/9 ★</div>
-        <div class="rank-bar"><div id="rankFill"></div></div>
-        <button id="btnGear">Жабдық ›</button>
+      <div class="side">
+        <div class="records">
+          <div class="cap">Рекордтар</div>
+          <div class="rgrid">
+            <div class="r"><span>Ең ұзақ атыс</span><span id="recRange">—</span></div>
+            <div class="r"><span>Ең ұзақ серия</span><span id="recStreak">—</span></div>
+            <div class="r"><span>Ең жақсы дәлдік</span><span id="recAcc">—</span></div>
+            <div class="r"><span>Барлық тигізу</span><span id="recHits">—</span></div>
+          </div>
+        </div>
+        <div class="rank-wrap">
+          <div id="rankLine">Үйренуші: 0/120</div>
+          <div class="rank-bar"><div id="rankFill"></div></div>
+        </div>
+        <div class="menu-btns">
+          <button class="btn primary" id="btnStart" data-testid="btn-start">Бастау</button>
+          <div class="btn-grid">
+            <button class="btn" id="btnLevels">Кезеңдер</button>
+            <button class="btn" id="btnShop" data-testid="btn-shop">Дүкен <span class="coinbadge"><svg class="coin sm"><use href="#coinSym"/></svg><span id="menuCoins" class="num">0</span></span><i class="dot" id="shopDot" hidden></i></button>
+            <button class="btn" id="btnGear" data-testid="btn-loadout">Жабдық</button>
+            <button class="btn" id="btnHowto">Қалай ойнау</button>
+          </div>
+        </div>
       </div>
-      <div class="menu-shop">
-        <button class="btn" id="btnShop" data-testid="btn-shop">Дүкен <span class="coinbadge"><svg class="coin sm"><use href="#coinSym"/></svg><span id="menuCoins" class="num">0</span></span><i class="dot" id="shopDot" hidden></i></button>
-      </div>
-      <div class="menu-btns">
-        <button class="btn primary" id="btnStart" data-testid="btn-start">Бастау</button>
-        <button class="btn" id="btnLevels">Кезеңдер</button>
-        <button class="btn" id="btnHowto">Қалай ойнау</button>
-        <button class="btn" id="btnSettings">Баптаулар</button>
-      </div>
-      <div class="footer" id="menuFooter">Кезең 1/12 · ★ 0/36 · Медаль 0/36</div>
-      <div class="desktop-hint" id="desktopHint" hidden>Тінтуір: сүйреу — көздеу · Space — ату · Shift — дем · дөңгелек — масштаб</div>
+      <div class="footer" id="menuFooter">Кезең 1/12 · Баға ★ 0/36 · Медаль 0/36</div>
+      <div class="desktop-hint" id="desktopHint" hidden>Тінтуір: сүйреу — көздеу · Space — ату · Shift — дем · дөңгелек — масштаб · V — көрініс</div>
     </div>
   </section>
 
@@ -849,9 +879,9 @@ function applyLoadout() {
   sway.mult = RIFLE.sway * (GEAR.bipod ? 0.6 : 1);
   BREATH.sweet = GEAR.breath ? 5.0 : 3.0; BREATH.strain = BREATH.sweet + 1.0; BREATH.cooldown = GEAR.breath ? 1.5 : 2.5;
   if (!SCOPE.turret) dial = 0;
-  if (typeof document !== 'undefined' && $('app')) { $('app').className = COS.finish === 'finish_default' ? '' : COS.finish === 'finish_steel' ? 'finish-steel' : 'finish-gold'; if (save.hand === 1) $('app').classList.add('lefty'); }
+  const app = $('app'); app.classList.toggle('finish-steel', COS.finish === 'finish_steel'); app.classList.toggle('finish-gold', COS.finish === 'finish_gold');
 }
-function levelAmmo(L) { return mode === 'level' ? Math.max(3, L.ammo + RIFLE.ammoMod) : L.ammo; }   // ammo mod per level, min 3
+function levelAmmo(L, m) { return (m || mode) === 'level' ? Math.max(3, L.ammo + RIFLE.ammoMod) : L.ammo; }   // ammo mod per level, min 3
 const impactX = (az, d, wind) => az / 1000 * d + windM(d, wind);
 const impactY = (el, d) => el / 1000 * d + dropOffsetM(d);
 
@@ -1002,7 +1032,7 @@ const LEVELS = [
     stars: { two: 4, three: 2 }, challenges: ['gold', 'streak4', 'noMiss'], card: 'Шеберлігіңді дәлелде.',
     targets: [st('bottle', 200, -2.5, -0.9), swing(400, 0, -1.0, 2, 3), rail(500, 7, 1.0, 5, 3), bird(350, 3.5, 6), dive(400, 7.0, -5, 2.0), st('sil', 600, -4, -0.3), st('plate', 800, 3, 0.5), st('plateL', 900, 0, 1.2)] }
 ];
-const PALETTE_ORDER = ['dala', 'qys', 'ymyrt', 'tau'];
+const PALETTE_ORDER = ['dala', 'qys', 'ymyrt', 'tau', 'tun'];   // tun: cosmetic night, never picked by the wave generator (% 4)
 
 function parseChallenge(str) { const i = str.indexOf(':'); return i < 0 ? { id: str, n: 0 } : { id: str.slice(0, i), n: +str.slice(i + 1) }; }
 function challengeText(str) { const c = parseChallenge(str), s = CHALLENGE_STR[c.id]; return typeof s === 'function' ? s(c.n) : s; }
@@ -1123,7 +1153,10 @@ let simTime = 0, timeScale = 1, wallNow = 0, lastWall = 0;
 let zoom = 8, ppm = 13, zoomAnim = { from: 13, to: 13, t0: -1 };
 const aim = { az: 0, el: 0 }, aimTarget = { az: 0, el: 0 }, view = { az: 0, el: 0 };
 let wind = 0, windBase = 0, gustSeq = [], gustK = 0;
-const sway = { A: 0.5, ph: [0, 0, 0, 0], enabled: true, level: 0.5 };
+let hip = false, hipT0 = -1e9, dial = 0;   // hip view («Кең көрініс») and the turret elevation (mil, bore = aim + dial)
+const windTick = { on: false, mils: 0 }; let lrfLabels = 0;   // scope_wind hold mark; LRF labels drawn this frame
+const coinFx = { disp: 0, hold: 0, last: -1 };   // top-bar balance count-up; hold = level-end bonus not yet flown in
+const sway = { A: 0.5, ph: [0, 0, 0, 0], enabled: true, level: 0.5, mult: 1 };   // mult: rifle × bipod
 const breath = { phase: 'normal', t0: 0, m: 1, beatT: 0 };   // normal | hold | strain | release
 let targets = [], hitOrder = [], goldT = null, rangedTarget = null, rangedT = null;
 let lockUntil = 0, lastCamAt = -1e9, endAt = -1, endKind = '', levelClock0 = 0, genZoomPrev = 8;
@@ -1136,6 +1169,7 @@ const bullet = { active: false, tFire: 0, tImpact: 0, tLand: 0, azFire: 0, elFir
   cam: false, camStart: 0, camBudget: false, slowSim: 0, breathHeld: false, diving: false, moving: false, vAtFire: 0 };
 /* miss tail: the tracer flies on to the ground after the outcome is resolved */
 const tail = { on: false, miss: false, tFire: 0, tLand: 0, azFire: 0, elFire: 0, wind: 0, sLand: 0, ground: false, iAz: 0, iEl: 0, arcUntil: -10, arcS: 0 };
+const tracerMark = { t0: -10, az: 0, el: 0 };   // gear_tracer: impact marker persists 3 s
 const cam = { on: false, u: 0, phase: 'off', tPhase: 0, cAz: 0, cEl: 0, S: 1, Zcam: 1.5, sizeMils: 1, skipped: false, tImpactWall: 0 };
 const daily = { waves: null };
 const perf = { retryMs: 0, fps: 60, frames: 0, acc: 0 };
@@ -1144,13 +1178,16 @@ const bgCache = { canvas: null, grad: null, pal: null };
 const sess = { shots: 0, hits: 0, misses: 0, bulls: 0, goldShots: 0, streak: 0, streakRaw: 0, longestStreak: 0, longestHit: 0, nearMisses: [],
   challenges: [], goldState: 0, tGold: 0, goldX: 0, recordsFlashed: { range: 0, streak: 0 }, t0: 0, timeLeft: null, wave: 0, ammo: 0, score: 0, shown: 0,
   firstHitDone: false, zoomChanged: false, tableOpened: false, breathTapped: false, lastShot: null, waveScoreMult: 1, startWall: 0, elapsed: 0, hitList: [],
-  lastBanner10: false, lastShotBanner: false, lastTargetBanner: false, streakRecordFlashAt: 0, endlessRecordFlashed: false, clearAt: -1, recBefore: { range: 0, streak: 0 } };
+  lastBanner10: false, lastShotBanner: false, lastTargetBanner: false, streakRecordFlashAt: 0, endlessRecordFlashed: false, clearAt: -1, recBefore: { range: 0, streak: 0 },
+  coins: { hit: 0, bull: 0, move: 0, far: 0, gold: 0, clear: 0, first: 0, three: 0, medal: 0, wave: 0, daily: 0 }, coinsRun: 0, coinsBefore: 0, usedAmmo: false, usedSecond: false };
+const COIN_KEYS = ['hit', 'bull', 'move', 'far', 'gold', 'clear', 'first', 'three', 'medal', 'wave', 'daily'];
 
 function resetSession(L) {
   sess.shots = 0; sess.hits = 0; sess.misses = 0; sess.bulls = 0; sess.goldShots = 0; sess.streak = 0; sess.streakRaw = 0; sess.longestStreak = 0; sess.longestHit = 0;
   sess.nearMisses.length = 0; sess.challenges = L.challenges.map((c) => ({ str: c, id: parseChallenge(c).id, n: parseChallenge(c).n, state: 0 }));
   sess.goldState = 0; sess.tGold = 0; sess.goldX = 0; sess.recordsFlashed.range = 0; sess.recordsFlashed.streak = 0;
-  sess.t0 = simTime; sess.timeLeft = L.timeLimit ? L.timeLimit : null; sess.ammo = L.ammo; sess.score = 0; sess.shown = 0;
+  sess.t0 = simTime; sess.timeLeft = L.timeLimit ? L.timeLimit : null; sess.ammo = levelAmmo(L); sess.score = 0; sess.shown = 0;
+  for (const k of COIN_KEYS) sess.coins[k] = 0; sess.coinsRun = 0; sess.coinsBefore = save.coins; sess.usedAmmo = false; sess.usedSecond = false;
   sess.firstHitDone = false; sess.zoomChanged = false; sess.tableOpened = false; sess.breathTapped = false; sess.lastShot = null;
   sess.waveScoreMult = L.waveMult || 1; sess.startWall = performance.now(); sess.elapsed = 0; sess.hitList.length = 0;
   sess.lastBanner10 = false; sess.lastShotBanner = false; sess.lastTargetBanner = false; sess.streakRecordFlashAt = 0; sess.endlessRecordFlashed = false;
@@ -1163,7 +1200,7 @@ function makeTarget(row, id, t0, mandatory) {
   return { id, kind: row.kind, d: row.d, x: row.x || 0, y: row.y || 0, w: k.w, h: k.h, round: k.round, pattern: row.pattern || 'static',
     v: row.v || 0, R: row.R || 0, A: row.A || 0, T: row.T || 1, vx: row.vx || 0, dir: row.vx ? Math.sign(row.vx) : 1, Xb: 0.025 * row.d,
     Ay: row.Ay || 0, Ty: row.Ty || 2, dv: row.dv || 0, ph: 0, t0, alive: true, mandatory, hitAt: -10, diving: false, reactKind: '', splatX: 0, splatY: 0,
-    colorIdx: id, visible: true, scaleIn: -10, gone: false };
+    colorIdx: id, visible: true, scaleIn: -10, gone: false, dLabel: row.d + ' ' + S.m };   // dLabel: LRF text, built once
 }
 function periodOf(T) {
   switch (T.pattern) {
@@ -1195,8 +1232,8 @@ function aliveMandatory() { let n = 0; for (let i = 0; i < targets.length; i++) 
 function targetById(id) { for (let i = 0; i < targets.length; i++) if (targets[i].id === id) return targets[i]; return null; }
 
 /* -- sway & breath (§5.3) */
-function swayAz(t) { const A = sway.enabled ? sway.A : 0; return A * breath.m * (0.6 * Math.sin(2 * Math.PI * 0.27 * t + sway.ph[0]) + 0.4 * Math.sin(2 * Math.PI * 0.61 * t + sway.ph[1])); }
-function swayEl(t) { const A = sway.enabled ? sway.A : 0; return A * breath.m * (0.7 * Math.sin(2 * Math.PI * 0.35 * t + sway.ph[2]) + 0.3 * Math.sin(2 * Math.PI * 0.83 * t + sway.ph[3])); }
+function swayAz(t) { const A = sway.enabled && !hip ? sway.A * sway.mult : 0; return A * breath.m * (0.6 * Math.sin(2 * Math.PI * 0.27 * t + sway.ph[0]) + 0.4 * Math.sin(2 * Math.PI * 0.61 * t + sway.ph[1])); }
+function swayEl(t) { const A = sway.enabled && !hip ? sway.A * sway.mult : 0; return A * breath.m * (0.7 * Math.sin(2 * Math.PI * 0.35 * t + sway.ph[2]) + 0.3 * Math.sin(2 * Math.PI * 0.83 * t + sway.ph[3])); }
 function holdingBreath() { return breath.phase === 'hold' || breath.phase === 'strain'; }
 function breathTap() {
   if (screen !== 'play' || phase === 'intro' || paused) return;
@@ -1257,9 +1294,43 @@ function updateParticles(dt) {
     if (p.kind === PK.FEATHER) p.x += Math.sin(simTime * 5 + p.rot) * 0.6 * dt; }
 }
 function clearParticles() { for (let i = 0; i < 96; i++) PARTS[i].on = false; partsAlive = 0; }
-const POPS = []; for (let i = 0; i < 6; i++) POPS.push({ on: false, az: 0, el: 0, hh: 0, text: '', tag: '', t0: 0, bull: false, head: '' });
+const POPS = []; for (let i = 0; i < 6; i++) POPS.push({ on: false, az: 0, el: 0, hh: 0, text: '', tag: '', t0: 0, bull: false, head: '', coins: '' });
 let popNext = 0;
-function spawnPopup(az, el, text, tag, bull, head, hh) { const p = POPS[popNext]; popNext = (popNext + 1) % 6; p.on = true; p.az = az; p.el = el; p.hh = hh || 0; p.text = text; p.tag = tag; p.t0 = simTime; p.bull = bull; p.head = head; }
+function spawnPopup(az, el, text, tag, bull, head, hh, coins) { const p = POPS[popNext]; popNext = (popNext + 1) % 6; p.on = true; p.az = az; p.el = el; p.hh = hh || 0; p.text = text; p.tag = tag; p.t0 = simTime; p.bull = bull; p.head = head; p.coins = coins || ''; }
+
+/* -- coins («жұлдыз», SHOP-SPEC §1): balance + lifetime; the top bar counts up, a «+N» rides the hit popup */
+function earnCoins(n, key) {
+  n = Math.round(n); if (n <= 0) return 0;
+  save.coins += n; save.coinsEarned += n;
+  if (key && sess.coins[key] != null) { sess.coins[key] += n; sess.coinsRun += n; }
+  coinBump(); return n;
+}
+function earnHitCoins(T, bull, moving) {   // per-hit rule set; returns the popup text
+  if (mode === 'daily') { earnCoins(2, 'hit'); return '+2'; }
+  if (mode === 'endless') { earnCoins(1, 'hit'); return '+1'; }
+  let n = earnCoins(1, 'hit');
+  if (bull) n += earnCoins(1, 'bull'); if (moving) n += earnCoins(1, 'move'); if (T.d >= 500) n += earnCoins(1, 'far'); if (T.kind === 'gold') n += earnCoins(3, 'gold');
+  return '+' + n;
+}
+function coinBump() { const e = $('coinBar'); e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); sfx.coin(); }
+function coinTarget() { return Math.max(0, save.coins - coinFx.hold); }
+function uiCoins(force) {   // eased count-up of the displayed balance (all screens; called from frame())
+  const target = coinTarget(); if (force) coinFx.disp = target;
+  if (coinFx.disp !== target) { const d = target - coinFx.disp; coinFx.disp += Math.abs(d) < 0.6 ? d : d * 0.12; }
+  const v = Math.round(coinFx.disp); if (v !== coinFx.last) { coinFx.last = v; $('coinVal').textContent = fmt(v); }
+}
+/* DOM coin fly (shop fly-out / result fly-in): a few small coins glide from one element to another. */
+function coinFly(fromEl, toEl, n) {
+  if (!fromEl || !toEl || fromEl.offsetParent === null) return;
+  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect(), app = $('app'), ar = app.getBoundingClientRect();
+  const x0 = a.left + a.width / 2 - ar.left - 8, y0 = a.top + a.height / 2 - ar.top - 8, x1 = b.left + b.width / 2 - ar.left - 8, y1 = b.top + b.height / 2 - ar.top - 8;
+  for (let i = 0; i < Math.min(8, Math.max(3, n)); i++) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); e.setAttribute('class', 'coinfly'); e.innerHTML = '<use href="#coinSym"/>';
+    const jx = (i % 3 - 1) * 14, jy = ((i * 7) % 5 - 2) * 8; e.style.left = x0 + 'px'; e.style.top = y0 + 'px'; e.style.transform = `translate(${jx}px, ${jy}px)`; app.appendChild(e);
+    setTimeout(() => { e.style.transform = `translate(${x1 - x0}px, ${y1 - y0}px) scale(.6)`; e.style.opacity = '0'; }, 30 + 40 * i);
+    setTimeout(() => { e.remove(); }, 650 + 40 * i);
+  }
+}
 const banners = [{ text: '', t0: -10, sub: '', big: false, w: 0 }, { text: '', t0: -10, sub: '', big: false, w: 0 }];
 let bannerCount = 0;
 function bannerShift() { const a = banners[0], b = banners[1]; a.text = b.text; a.sub = b.sub; a.big = b.big; a.w = b.w; a.t0 = -1; }   // w: text width, measured once on the first draw
@@ -1282,7 +1353,7 @@ function findRanged() {
     const T = targets[i]; if (!T.alive) continue;
     const p = posAt(T, simTime), tAz = 1000 * p.x / T.d, tEl = 1000 * p.y / T.d, hw = T.w / 2 * 1000 / T.d, hh = T.h / 2 * 1000 / T.d;
     let dist = Math.hypot(Math.max(0, Math.abs(cAz - tAz) - hw), Math.max(0, Math.abs(cEl - tEl) - hh));
-    const bAz = 1000 * impactX(cAz, T.d, wind) / T.d, bEl = 1000 * impactY(cEl, T.d) / T.d;
+    const bAz = 1000 * impactX(cAz, T.d, wind) / T.d, bEl = 1000 * impactY(cEl + dial, T.d) / T.d;   // bore = reticle + turret dial
     const dist2 = Math.hypot(Math.max(0, Math.abs(bAz - tAz) - hw), Math.max(0, Math.abs(bEl - tEl) - hh));
     if (dist2 < dist) dist = dist2;
     if (dist < bd) { bd = dist; best = T; }
@@ -1339,12 +1410,13 @@ function updateGust() {
 /* -- fire (§5.5): outcome decided now, replayed by the animation */
 function fireShot(hook) {
   if (screen !== 'play' || phase === 'intro' || phase === 'ending' || paused) return null;
+  if (hip) { sfx.deny(); return null; }   // firing from the wide view is refused (SHOP-SPEC §4)
   if (sess.ammo <= 0) { sfx.dryClick(); return { hit: false, targetId: null, impact: null, t: 0 }; }
   if (bullet.active) { if (!hook) return null; resolveImpact(); if (phase !== 'aim' && phase !== 'cam') return null; }
   if (!hook && simTime < lockUntil) return null;
   const u1 = rng(), u2 = rng(), u3 = rng();
   const r = DISP * Math.sqrt(u1), th = 2 * Math.PI * u2;
-  const az = aim.az + swayAz(simTime) + r * Math.cos(th), el = aim.el + swayEl(simTime) + r * Math.sin(th);
+  const az = aim.az + swayAz(simTime) + r * Math.cos(th), el = aim.el + dial + swayEl(simTime) + r * Math.sin(th);   // bore = reticle + dial
   let hitT = null, ix = 0, iy = 0, t = 0, s = 0, ground = false;
   for (let i = 0; i < hitOrder.length; i++) {
     const T = hitOrder[i]; if (!T.alive) continue;
@@ -1369,9 +1441,9 @@ function fireShot(hook) {
   }
   sess.ammo--; sess.shots++; if (hitT && hitT.kind === 'gold') sess.goldShots++;
   if (!$('hint').hidden) hintDismiss();   // hint off on fire
-  phase = 'flight'; lockUntil = simTime + Math.max(BOLT, tRes + LOCK_AFTER_IMPACT);
-  recoil.t0 = simTime; recoil.az = 0.3 * (2 * u3 - 1);
-  sfx.shot(); buzz(18); queueSound(simTime + 0.35, sfx.bolt, 0); queueSound(simTime + 0.65, sfx.bolt, 0);
+  phase = 'flight'; lockUntil = simTime + Math.max(RIFLE.bolt, tRes + LOCK_AFTER_IMPACT);
+  recoil.t0 = simTime; recoil.az = 0.3 * RIFLE.recoil * (2 * u3 - 1);
+  sfx.shot(); buzz(Math.round(18 * RIFLE.recoil)); queueSound(simTime + 0.35 * RIFLE.bolt / 0.9, sfx.bolt, 0); queueSound(simTime + 0.65 * RIFLE.bolt / 0.9, sfx.bolt, 0);
   const oc = chGet('onlyN'); if (oc && oc.state === 0 && sess.shots > oc.n) chFail('onlyN');
   if (sess.ammo === 1 && !sess.lastShotBanner) { sess.lastShotBanner = true; banner(S.lastShot); }
   uiOnFire();
@@ -1402,6 +1474,7 @@ function resolveImpact() {
   const B = bullet; if (!B.active) return; B.active = false; const T = B.hitTarget, tI = B.tImpact, inCam = cam.on;
   tail.miss = !T; tail.tFire = B.tFire; tail.tLand = B.tLand; tail.azFire = B.azFire; tail.elFire = B.elFire; tail.wind = B.wind; tail.sLand = B.sLand; tail.ground = B.ground; tail.iAz = B.iAz; tail.iEl = B.iEl;
   tail.on = tail.miss && B.tLand > tI + 1e-6; if (!tail.on) tailLand();
+  if (GEAR.tracer) { tracerMark.t0 = tI; tracerMark.az = T ? 1000 * B.ix / T.d : B.iAz; tracerMark.el = T ? 1000 * B.iy / T.d : B.iEl; }
   const u = rng(); shake.dx = Math.cos(u * 6.2832); shake.dy = Math.sin(u * 6.2832);
   if (T) {
     const p = posAt(T, tI), px = p.x, py = p.y;
@@ -1417,7 +1490,8 @@ function resolveImpact() {
     let tag = '';
     if (bull) tag += S.tagBull; if (mult > 1) tag += (tag ? ' · ' : '') + `${S.tagStreak} ×${mult}`; if (isGold) tag += (tag ? ' · ' : '') + S.tagGold;
     if (sess.waveScoreMult > 1) tag += (tag ? ' · ' : '') + `${S.tagWave} ×${fmtMil(sess.waveScoreMult, 1)}`;
-    spawnPopup(tAz, tEl, '+' + fmt(pts), tag, bull, bull ? S.bull : S.hit, T.h / 2 * 1000 / T.d);
+    const coinTxt = earnHitCoins(T, bull, B.moving || !!BIRD_KINDS[T.kind]);
+    spawnPopup(tAz, tEl, '+' + fmt(pts), tag, bull, bull ? S.bull : S.hit, T.h / 2 * 1000 / T.d, coinTxt);
     setFeedback(bull ? S.bull : S.hit, '', bull ? 'bull' : 'hit', 1.0);
     /* streak record (C12): first at ≥ 3 then every +3; one gate for banner and note */
     let recFlash = false;
@@ -1514,7 +1588,7 @@ function spawnReaction(T, tAz, tEl, inCam) {
 }
 
 /* -- solve (§5.5): exact aim for the centre at the moment of impact */
-function solveFor(T) { const d = T.d, t = tof(d), p = posAt(T, simTime + t); return { az: 1000 * (p.x - windM(d, wind)) / d, el: 1000 * p.y / d + dropMils(d), t }; }
+function solveFor(T) { const d = T.d, t = tof(d), p = posAt(T, simTime + t); return { az: 1000 * (p.x - windM(d, wind)) / d, el: 1000 * p.y / d + dropMils(d) - dial, t }; }   // reticle aim; the turret dial lifts the bore
 
 /* -- level & mode flow */
 function startLevel(i, opts) {
@@ -1541,17 +1615,17 @@ function beginPlay(L, retry, intro) {
   clearSounds(); clearParticles(); bannerCount = 0; for (const p of POPS) p.on = false;
   cam.on = false; cam.phase = 'off'; cam.S = 1; timeScale = 1; bullet.active = false; bullet.hitTarget = null; tail.on = false; tail.arcUntil = -10;
   recoil.t0 = -10; shake.t0 = -10; flash.t0 = -10; arrowFx.t0 = -10; feedback.until = -1; feedback.text = '';
-  breath.phase = 'normal'; breath.m = 1;
+  breath.phase = 'normal'; breath.m = 1; hip = false; hipT0 = -1e9; dial = 0; windTick.on = false; tracerMark.t0 = -10; coinFx.hold = 0; uiHip();
   paused = false; overlay = 'none'; $('tableOverlay').hidden = true; $('pauseOverlay').hidden = true;   // no inherited sheet
   sway.A = SWAY_A[L.sway] != null ? SWAY_A[L.sway] : (typeof L.sway === 'number' ? L.sway : 0.5);
   if (mode !== 'level') sway.A = L.sway;
   resetSession(L); spawnTargets(L);
   if (mode === 'daily' || mode === 'endless') { sess.wave = wave; }
-  zoom = L.zoom; ppm = BASE_PPM[zoom] * layout.R / R_REF; zoomAnim.t0 = -1; uiZoom();
+  zoom = scopeZoom(L.zoom); ppm = ppmOf(zoom); zoomAnim.t0 = -1; uiZoom();
   aim.az = 0; aim.el = 0; aimTarget.az = 0; aimTarget.el = 0; view.az = 0; view.el = 0;
   lockUntil = 0; endAt = -1; endKind = ''; ensureBackground(L); ensureAtlas(); go('play');
   if (intro) { phase = 'intro'; uiIntro(L); } else { phase = 'aim'; uiIntroHide(); levelClock0 = simTime; sess.t0 = simTime; }
-  uiResetHUD(L); uiChallenges(false); uiStreak('reset'); uiBreath(); uiFireLock();
+  uiResetHUD(L); uiChallenges(false); uiStreak('reset'); uiBreath(); uiFireLock(); uiTurret();
   if (!retry && !intro) hintTrigger('start');
   startWindBed();
   drawFrame(0);
@@ -1579,10 +1653,11 @@ function nextWave() {
   sess.wave = wave; sess.recBefore.range = rbR; sess.recBefore.streak = rbS; sess.recordsFlashed.range = rfR; sess.recordsFlashed.streak = rfS; sess.streakRecordFlashAt = rfAt; sess.endlessRecordFlashed = erf;
   for (const x of nm) sess.nearMisses.push(x); for (const x of hl) sess.hitList.push(x);
   sway.A = L.sway; levelClock0 = simTime + 1.2; sess.t0 = levelClock0; wind = level.wind; windBase = level.wind;   // clock starts after the banner (C15)
-  if (L.zoom !== zoom && genZoomPrev !== L.zoom) { zoom = L.zoom; ppm = BASE_PPM[zoom] * layout.R / R_REF; zoomAnim.t0 = -1; uiZoom(); }   // briefing zoom
+  if (scopeZoom(L.zoom) !== zoom && genZoomPrev !== L.zoom) { zoom = scopeZoom(L.zoom); ppm = ppmOf(zoom); zoomAnim.t0 = -1; uiZoom(); }   // briefing zoom
   genZoomPrev = L.zoom;
   ensureBackground(L);
-  banner(`${S.wave} ${wave}`, `+${L.ammo} ${S.ammo.toLowerCase()}`, true); banner(S.ready); sfx.wave();
+  const cw = mode === 'endless' ? earnCoins(3, 'wave') : 0;   // +3 per cleared wave (SHOP-SPEC §1)
+  banner(`${S.wave} ${wave}`, `+${L.ammo} ${S.ammo.toLowerCase()}${cw ? ` · +${cw} ${S.coin}` : ''}`, true); banner(S.ready); sfx.wave();
   uiResetHUD(L); uiChallenges(false); uiStreak(streak >= 2 ? 'hit' : 'reset'); uiFireLock();
   lockUntil = simTime + 1.2;   // targets are live when the banner ends
   startWindBed();
@@ -1605,7 +1680,10 @@ function levelEnd() {
   const acc = sess.shots - sess.goldShots > 0 ? 100 * sess.hits / (sess.shots - sess.goldShots) : 0;
   const elapsed = (clear && sess.clearAt >= 0 ? sess.clearAt : simTime) - levelClock0;   // frozen at the clearing impact
   const res = { clear: clear || (mode === 'daily' && endKind === 'clear'), kind: endKind, acc, elapsed, stars: 0, newBest: false, records: { acc: false, range: false, streak: false },
-    bonus: { acc: 0, ammo: 0, time: 0 }, total: sess.score, medals: 0, prevBest: 0, rankUp: false, unlockedReticle: -1, unlockedLevel: false };
+    bonus: { acc: 0, ammo: 0, time: 0 }, total: sess.score, medals: 0, prevBest: 0, rankUp: false, unlockedLevel: false, coinsEnd: 0, coinsRun: 0, teaser: null, secondAvail: false };
+  /* «Оқ таусылды» with a second chance in stock: the run is not final yet — no persistent writes until it really ends */
+  res.secondAvail = endKind === 'ammo' && mode !== 'daily' && !sess.usedSecond && save.inv.use_second > 0;
+  const affordableBefore = cheapestNew(sess.coinsBefore);
   if (mode === 'level') {
     const L = level, i = levelIndex;
     res.prevBest = save.best[i];
@@ -1614,27 +1692,41 @@ function levelEnd() {
       res.bonus.acc = Math.min(300, Math.round(3 * acc)); res.bonus.ammo = 40 * sess.ammo; res.bonus.time = L.timeLimit ? 5 * Math.round(Math.max(0, L.timeLimit - elapsed)) : 0;
       res.total = sess.score + res.bonus.acc + res.bonus.ammo + res.bonus.time;
       res.stars = 1 + (sess.misses <= L.stars.two ? 1 : 0) + (sess.misses <= L.stars.three ? 1 : 0);
-      const starsBefore = totalStars();
+      /* level-end coins (SHOP-SPEC §1): cleared 5, first clear 10, first 3★ 10, each new medal 5 */
+      let endC = earnCoins(5, 'clear'); if (save.stars[i] === 0) endC += earnCoins(10, 'first'); if (res.stars === 3 && save.stars[i] < 3) endC += earnCoins(10, 'three');
       if (res.stars > save.stars[i]) save.stars[i] = res.stars;
       if (res.total > save.best[i]) { res.newBest = save.best[i] > 0; save.best[i] = res.total; }   // «Жаңа рекорд!» only beats a real previous best
       let bits = 0; sess.challenges.forEach((c, k) => { if (c.state === 1) bits |= (1 << k); });
-      save.medals[i] |= bits; res.medals = bits;
+      const newMedals = bits & ~save.medals[i]; let nm = 0; for (let b = 0; b < 3; b++) if (newMedals & (1 << b)) nm++; if (nm) endC += earnCoins(5 * nm, 'medal');
+      save.medals[i] |= bits; res.medals = bits; res.coinsEnd = endC;
       if (save.unlocked < i + 2) { save.unlocked = Math.min(12, i + 2); res.unlockedLevel = true; }
-      const starsAfter = totalStars();
-      if (rankOf(starsAfter) > save.rankSeen) res.rankUp = true;
-      for (let r = 1; r < 3; r++) if (starsBefore < RETICLE_STARS[r] && starsAfter >= RETICLE_STARS[r]) res.unlockedReticle = r;
     }
   } else if (mode === 'endless') {
-    if (sess.score > save.endless.best) { res.newBest = save.endless.best > 0; save.endless.best = sess.score; }
-    if (wave > save.endless.bestWave) save.endless.bestWave = wave;
+    if (!res.secondAvail) { if (sess.score > save.endless.best) { res.newBest = save.endless.best > 0; save.endless.best = sess.score; } if (wave > save.endless.bestWave) save.endless.bestWave = wave; }
   } else {
     if (sess.score > save.daily.best) { res.newBest = save.daily.best > 0; save.daily.best = sess.score; }
+    if (res.clear && !save.daily.coinsDone) { save.daily.coinsDone = 1; res.coinsEnd = earnCoins(15, 'daily'); }   // all 5 waves, once per day
   }
-  if (sess.shots - sess.goldShots >= 5 && acc > save.records.acc) { save.records.acc = acc; res.records.acc = true; }
-  if (sess.longestHit > sess.recBefore.range && sess.longestHit > 0) res.records.range = true;   // strictly better than the record before this level
-  if (sess.longestStreak > sess.recBefore.streak && sess.longestStreak > 0) res.records.streak = true;
-  writeSave();
+  res.coinsRun = sess.coinsRun; coinFx.hold = res.coinsEnd;   // the end bonus flies in on the result screen
+  if (rankOf(save.coinsEarned) > save.rankSeen) res.rankUp = true;
+  if (!res.secondAvail) {
+    if (sess.shots - sess.goldShots >= 5 && acc > save.records.acc) { save.records.acc = acc; res.records.acc = true; }
+    if (sess.longestHit > sess.recBefore.range && sess.longestHit > 0) res.records.range = true;   // strictly better than the record before this level
+    if (sess.longestStreak > sess.recBefore.streak && sess.longestStreak > 0) res.records.streak = true;
+    writeSave();
+  }
+  const aff = cheapestNew(save.coins); if (aff && (!affordableBefore || aff.price > sess.coinsBefore)) res.teaser = aff;   // «Дүкенде жаңа зат: …» only when the balance crossed a price this run
   showResult(res);
+}
+/* cheapest not-owned item the balance can pay for (consumables excluded: they are always «new») */
+function cheapestNew(balance) { let best = null; for (const it of ITEMS) if (it.price > 0 && !save.owned[it.id] && it.cat !== 'use' && it.price <= balance && (!best || it.price < best.price)) best = it; return best; }
+/* second chance («Екінші мүмкіндік»): back into the same level with +3 ammo, score and streak kept */
+function resumeSecond() {
+  if (!resData || !resData.secondAvail || save.inv.use_second <= 0 || sess.usedSecond) return;
+  save.inv.use_second--; sess.usedSecond = true; scheduleSave();
+  resTimers.forEach(clearTimeout); resTimers = []; resEndState = true; resAnim.on = false; coinFx.hold = 0;
+  go('play'); phase = 'aim'; endAt = -1; endKind = ''; sess.ammo += 3; chFail('onlyN'); lockUntil = simTime + 0.3;
+  uiFireLock(); uiTurret(); uiFrame(); startWindBed(); banner(`+3 ${S.ammo.toLowerCase()}`); sfx.wave();
 }
 
 /* -- bullet cam runtime (§8.A5) */
@@ -1685,7 +1777,7 @@ function simStep(dt) {
     if (sess.timeLeft <= 0 && !bullet.active && phase !== 'ending' && phase !== 'ended') { phase = 'ending'; endAt = simTime; endKind = 'time'; }
   }
   const uc = chGet('under'); if (uc && uc.state === 0 && phase !== 'ending' && phase !== 'ended' && sess.elapsed > uc.n) chFail('under');
-  if (bullet.active && bullet.cam && !cam.on && simTime >= bullet.camStart && phase === 'flight') { bullet.cam = false; camStart(); }   // same for rAF and step()
+  if (bullet.active && bullet.cam && !cam.on && simTime >= bullet.camStart && phase === 'flight') { bullet.cam = false; if (!hip) camStart(); }   // same for rAF and step(); never from the hip view
   if (bullet.active && simTime >= bullet.tImpact) resolveImpact();
   if (tail.on && simTime >= tail.tLand) tailLand();
   if (feedback.until >= 0 && simTime > feedback.until && feedback.kind !== 'cam') { feedback.until = -1; feedback.text = ''; uiFeedback(); }
@@ -1712,8 +1804,12 @@ const PALETTES = {
   ymyrt: {
     skyTop: '#2a2f5e', skyHor: '#e8875a', band: '#f2b26b', far: '#3a3550', mid: '#2b2740', ground: '#6e5a4a', stripe: '#574539', haze: '#8a6f62', hazeK: [0.5, 0.38, 0.26, 0.16, 0.08, 0], base: '#574539', snow: false, hazeExtra: 0.1 },
   tau:   {
-    skyTop: '#4e79b8', skyHor: '#a9c6e8', far: '#e9eef3', farShadow: '#8ea3bc', mid: '#5f7d5a', ground: '#8b8470', stripe: '#7a7466', haze: '#a9b3b6', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#7a7466', snow: false, hazeExtra: 0 }
+    skyTop: '#4e79b8', skyHor: '#a9c6e8', far: '#e9eef3', farShadow: '#8ea3bc', mid: '#5f7d5a', ground: '#8b8470', stripe: '#7a7466', haze: '#a9b3b6', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#7a7466', snow: false, hazeExtra: 0 },
+  tun:   {   /* «Түн»: cosmetic night override — dark sky, moon, brighter tracer */
+    skyTop: '#070a1a', skyHor: '#22304f', far: '#141a2c', mid: '#1b2233', ground: '#3a3f4a', stripe: '#2c3039', haze: '#2a3448', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#2c3039', snow: false, hazeExtra: 0.15, night: true }
 };
+/* palette in effect for a level: the cosmetic override wins (SHOP-SPEC §2.5) */
+function paletteFor(L) { const it = ITEM_BY_ID[COS.palette]; return it && it.pal ? it.pal : L.palette; }
 function mix(a, b, k) { const c = (h, i) => parseInt(h.slice(i, i + 2), 16); return `rgb(${[1, 3, 5].map((i) => Math.round(lerp(c(a, i), c(b, i), k))).join(',')})`; }   // bake-time only
 function mkCanvas(w, h, dpr) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * dpr)); c.height = Math.max(1, Math.round(h * dpr)); return c; }
 
@@ -1727,20 +1823,20 @@ function resize() {
   if (layout.landscape) { layout.R = 0.44 * Math.min(w, h); layout.cx = w / 2; layout.cy = h / 2; }
   else { layout.R = clamp(Math.min(0.477 * w, (h - 375) / 2), 120, 220); layout.cy = h - 258 - layout.R; layout.cx = w / 2; }
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
-  ppm = BASE_PPM[zoom] * layout.R / R_REF; zoomAnim.t0 = -1; bakeVignette(); bakeReticles(); initSnow(); positionHUD();
+  if (SCOPE.zooms.indexOf(zoom) < 0) zoom = SCOPE.zooms[1]; ppm = ppmOf(zoom); zoomAnim.t0 = -1; bakeVignette(); bakeReticles(); initSnow(); positionHUD();
   const mc = $('menuCanvas'); mc.width = Math.round(w * dpr); mc.height = Math.round(h * dpr);
   if (screen === 'play') drawFrame(0);
-  if (screen === 'menu') drawMenu(true);
+  if (screen === 'menu') { drawMenu(true); lobbyLayout(); }
 }
 function positionHUD() {
   const { w, h, cx, cy, R, landscape } = layout, rs = R / R_REF, lefty = save.hand === 1;
   const put = (id, x, y) => { const e = $(id); e.style.left = (lefty ? w - x : x) + 'px'; e.style.top = y + 'px'; };
   const sab = 'var(--sab)';
   const putB = (id, x, fromBottom) => { const e = $(id); e.style.left = (lefty ? w - x : x) + 'px'; e.style.top = 'auto'; e.style.bottom = `calc(${fromBottom}px + ${sab})`; e.style.transform = 'translate(-50%, 50%)'; };
-  if (!landscape) { putB('btnFire', w - 80, 84); putB('btnBreath', w - 178, 62); putB('btnZoom', w - 50, 192); putB('btnTable', 60, 180); putB('btnPause', 60, 88); }
-  else {   /* zoom/table at 140: 8 px clear of the fire circle */
-    putB('btnFire', w - 60, 60); putB('btnBreath', 60, 60); putB('btnZoom', w - 60, 140); putB('btnTable', 60, 140);
-    const p = $('btnPause'); p.style.bottom = 'auto'; p.style.transform = 'translate(-50%, -50%)'; put('btnPause', 40, 150);
+  if (!landscape) { putB('btnFire', w - 80, 84); putB('btnBreath', w - 178, 62); putB('btnZoom', w - 50, 192); putB('btnTable', 60, 180); putB('btnPause', 60, 88); putB('btnHip', 60, 260); putB('btnDialDown', 124, 200); putB('btnDialUp', 124, 260); }
+  else {   /* left cluster: ДЕМ · КЕСТЕ · КӨРІНІС stacked, turret ▲▼ beside them; pause moves to the right edge above the zoom button */
+    putB('btnFire', w - 60, 60); putB('btnBreath', 60, 60); putB('btnZoom', w - 60, 140); putB('btnTable', 60, 140); putB('btnHip', 60, 212); putB('btnDialDown', 124, 140); putB('btnDialUp', 124, 196);
+    const p = $('btnPause'); p.style.bottom = 'auto'; p.style.transform = 'translate(-50%, -50%)'; put('btnPause', w - 40, 150);
   }
   /* range readout outside the circle at every R; caption right-anchored */
   const rg = $('hudRange'), rc = $('hudRangeCap'), bx = rangeBoxX(), by = rangeBoxY();
@@ -1784,14 +1880,15 @@ function bakeVignette() {
   g.beginPath(); g.moveTo(bx - 30, by + 4); g.lineTo(bx - 30, by - 9); g.lineTo(bx - 21, by - 9); g.moveTo(bx + 30, by + 4); g.lineTo(bx + 30, by - 9); g.lineTo(bx + 21, by - 9); g.stroke();
 }
 /* -- reticles (one per zoom for the selected style) */
-const reticles = { 4: null, 8: null, 12: null };
-function bakeReticles() { for (const z of [4, 8, 12]) reticles[z] = bakeReticle(z, save.reticle, layout.R, layout.dpr); }
+const reticles = {};   // one bake per zoom of the equipped scope, in the equipped reticle colour
+const ppmOf = (z) => PPM_PER_X * z * layout.R / R_REF;   // px per mil: ×4 = 6.5, ×8 = 13, ×12 = 19.5, ×20 = 32.5 at R = 186
+function bakeReticles() { for (const z of SCOPE.zooms) reticles[z] = bakeReticle(z, COS.reticle, layout.R, layout.dpr); }
 function bakeReticle(z, style, R, dpr) {
-  const c = mkCanvas(2 * R, 2 * R, dpr), g = c.getContext('2d'); g.scale(dpr, dpr); drawReticleInto(g, R, R, R, BASE_PPM[z] * R / R_REF, z, style); return c;
+  const c = mkCanvas(2 * R, 2 * R, dpr), g = c.getContext('2d'); g.scale(dpr, dpr); drawReticleInto(g, R, R, R, PPM_PER_X * z * R / R_REF, z, style); return c;
 }
 function drawReticleInto(g, cx, cy, R, p, z, style) {
-  const lw = style === 0 ? 1.5 : 1, dotR = style === 0 ? 1.75 : 1.25, gap = 3, step = z === 4 ? 2 : 1, maxMil = z === 4 ? 24 : 12;
-  const lineCol = style === 2 ? 'rgba(20,20,20,.6)' : '#111'; const arms = () => { g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx - gap, cy); g.moveTo(cx + gap, cy); g.lineTo(cx + R, cy);
+  const lw = style === 0 ? 1.5 : 1, dotR = style === 0 ? 1.75 : 1.25, gap = 3, step = z <= 6 ? 2 : 1, maxMil = z <= 6 ? 24 : 12;
+  const lineCol = RET_LINE[style] || '#111'; const arms = () => { g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx - gap, cy); g.moveTo(cx + gap, cy); g.lineTo(cx + R, cy);
   g.moveTo(cx, cy + gap); g.lineTo(cx, cy + R); g.moveTo(cx, cy - gap); g.lineTo(cx, cy - R); g.stroke(); };
   if (style === 0) { g.lineCap = 'round'; g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = lw + 3; arms(); }
   g.strokeStyle = lineCol; g.fillStyle = lineCol; g.lineWidth = lw; arms();
@@ -1802,11 +1899,12 @@ function drawReticleInto(g, cx, cy, R, p, z, style) {
   for (const m of [5, 10, 15, 20]) { const o = m * p, hl = 0.8 * p; if (o > R - 8) break;
     g.beginPath(); g.moveTo(cx - o, cy - hl / 2); g.lineTo(cx - o, cy + hl / 2); g.moveTo(cx + o, cy - hl / 2); g.lineTo(cx + o, cy + hl / 2); g.moveTo(cx - hl / 2, cy + o); g.lineTo(cx + hl / 2, cy + o); g.stroke();
     g.fillText(String(m), cx - o, cy + hl / 2 + 8); g.fillText(String(m), cx + o, cy + hl / 2 + 8); g.fillText(String(m), cx + hl / 2 + 9, cy + o); }
-  if (z === 12) {
+  if (z >= 12) {   // fine half-mil ticks at ×12 and ×20
     const t = 0.3 * p;
     for (let m = 0.5; m <= maxMil; m += 1) { const o = m * p; if (o > R - 6) break; g.beginPath(); g.moveTo(cx - o, cy - t / 2); g.lineTo(cx - o, cy + t / 2); g.moveTo(cx + o, cy - t / 2); g.lineTo(cx + o, cy + t / 2); g.moveTo(cx - t / 2, cy + o); g.lineTo(cx + t / 2, cy + o); g.stroke(); }
   }
   if (style === 2) { g.fillStyle = '#3cff7a'; g.beginPath(); g.arc(cx, cy, 2, 0, 6.2832); g.fill(); g.strokeStyle = 'rgba(60,255,122,.7)'; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, p, 0, 6.2832); g.stroke(); }
+  else if (style === 3) { g.fillStyle = '#ff3b30'; g.beginPath(); g.arc(cx, cy, 1.6, 0, 6.2832); g.fill(); }
   else { g.beginPath(); g.arc(cx, cy, 0.75, 0, 6.2832); g.fill(); }
 }
 
@@ -1861,7 +1959,7 @@ function sprite(g, name, dx, dy, dw, dh) { const s = SPR[name]; g.drawImage(atla
 /* -- background strip in mil space (once per level palette) */
 const strips = {};
 function ensureBackground(L) {
-  const key = L.palette;
+  const key = paletteFor(L);
   if (!strips[key]) strips[key] = bakeStrip(key);
   bgCache.canvas = strips[key]; const pal = PALETTES[key]; const grad = ctx.createLinearGradient(0, -40, 0, 0);
   if (pal.band) { grad.addColorStop(0, pal.skyTop); grad.addColorStop(0.85, pal.skyHor); grad.addColorStop(1, pal.band); }
@@ -1897,6 +1995,10 @@ function bakeStrip(key) {
     for (let k = 0; k < 5; k++) { g.fillStyle = 'rgba(120,80,110,.55)'; g.beginPath(); g.ellipse(X(-50 + 25 * k + r() * 10), Y(3 + r() * 6), (6 + r() * 6) * STRIP_PPM, 0.35 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
   if (key === 'tau') { g.fillStyle = '#26262c'; g.beginPath(); g.moveTo(X(30), Y(10)); g.lineTo(X(30.6), Y(10.3)); g.lineTo(X(31.2), Y(10)); g.lineTo(X(30.6), Y(9.85)); g.closePath(); g.fill();
     for (let k = 0; k < 3; k++) { g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.ellipse(X(-40 + 40 * k), Y(8 + r() * 2), 5 * STRIP_PPM, 0.6 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
+  if (key === 'tun') {   /* moon, stars, thin cloud */
+    g.fillStyle = '#f4f0dc'; g.beginPath(); g.arc(X(26), Y(9), 2.2 * STRIP_PPM, 0, 6.2832); g.fill(); g.fillStyle = pal.skyTop; g.beginPath(); g.arc(X(26.9), Y(9.4), 1.9 * STRIP_PPM, 0, 6.2832); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < 90; i++) { const s = 0.5 + r() * 1.2; g.fillRect(X(-70 + r() * 140), Y(2 + r() * 10), s, s); }
+    for (let k = 0; k < 3; k++) { g.fillStyle = 'rgba(60,72,100,.55)'; g.beginPath(); g.ellipse(X(-50 + 35 * k + r() * 10), Y(3 + r() * 4), (6 + r() * 6) * STRIP_PPM, 0.35 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
   /* ground bands (aerial perspective) */
   const bands = [0, -0.8, -1.8, -3.2, -5.5, -10, -35];
   for (let i = 0; i < 6; i++) { g.fillStyle = mix(pal.ground, pal.haze, pal.hazeK[i]); g.fillRect(0, Y(bands[i]), W, Y(bands[i + 1]) - Y(bands[i])); }
@@ -1909,7 +2011,7 @@ function bakeStrip(key) {
     else g.fillRect(X(-70 + r() * 60), Y(el), (30 + r() * 80) * STRIP_PPM, h * STRIP_PPM);
     g.globalAlpha = 1;
   }
-  g.strokeStyle = key === 'qys' ? '#6b6f78' : key === 'tau' ? '#6e6a5a' : key === 'ymyrt' ? '#4a3c30' : '#7f8a44'; g.lineWidth = 1.2;
+  g.strokeStyle = key === 'qys' ? '#6b6f78' : key === 'tau' ? '#6e6a5a' : key === 'ymyrt' ? '#4a3c30' : key === 'tun' ? '#1f2430' : '#7f8a44'; g.lineWidth = 1.2;
   for (let i = 0; i < 300; i++) {
     const el = -1.5 - Math.pow(r(), 1.5) * 33, az = -70 + r() * 140, len = (0.15 + Math.abs(el) * 0.05) * STRIP_PPM;
     g.beginPath(); g.moveTo(X(az), Y(el)); g.lineTo(X(az) + (r() - 0.5) * len * 0.6, Y(el) - len); g.stroke();
@@ -1965,8 +2067,11 @@ function drawFrame(dtWall) {
   /* zoom ease (draw scale only) */
   let pp = ppm; if (zoomAnim.t0 >= 0) { const u = clamp((wallNow - zoomAnim.t0) / 120, 0, 1); pp = lerp(zoomAnim.from, zoomAnim.to, outCubic(u)); if (u >= 1) zoomAnim.t0 = -1; }
   if (cam.on) pp *= cam.S;
-  const rτ = t - recoil.t0, rk = rτ < 0.5 && rτ >= 0 ? Math.exp(-rτ / 0.12) : 0;
-  V.az = cam.on ? cam.cAz : aim.az + swayAz(t) + recoil.az * rk; V.el = cam.on ? cam.cEl : aim.el + swayEl(t) + 1.8 * rk; V.pp = pp;
+  /* hip view («Кең көрініс»): 200 ms ease between the scope and the ±60 mil wide view; hk = 0 scope … 1 hip */
+  const hu = clamp((wallNow - hipT0) / HIP_MS, 0, 1), hk = reducedMotion ? (hip ? 1 : 0) : (hip ? hu : 1 - hu), hipPpm = w / HIP_FOV;
+  if (hk > 0) pp = lerp(pp, hipPpm, smooth(hk));
+  const rτ = t - recoil.t0, rk = (rτ < 0.5 && rτ >= 0 ? Math.exp(-rτ / 0.12) : 0) * RIFLE.recoil;
+  V.az = cam.on ? cam.cAz : aim.az + swayAz(t) + recoil.az * rk; V.el = cam.on ? cam.cEl : aim.el + dial * (1 - hk) + swayEl(t) + 1.8 * rk; V.pp = pp;   // the scene is centred on the bore (aim + dial)
   const sτ = t - shake.t0; let sh = 0; if (sτ >= 0 && sτ < 0.2) sh = shake.A * Math.exp(-sτ / 0.06) * Math.sin(6.2832 * 30 * sτ) * (reducedMotion ? 0.4 : 1);
   V.shx = sh * shake.dx; V.shy = sh * shake.dy;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1987,8 +2092,11 @@ function drawFrame(dtWall) {
   drawParticles();
   /* 8. snow */
   if (pal.snow) drawSnow(dtWall);
+  /* 8b. rangefinder labels (gear_lrf) and hip-view markers / bird paths / wind arrow */
+  lrfLabels = 0; if (GEAR.lrf || hk > 0.5) drawTargetLabels(t, hk);
+  if (hk > 0.5) drawHipExtras(t, hk);
   /* 9. popups, correction arrow, banners, rim arrows */
-  drawPopups(t); drawArrow(t); drawRimArrows(t); drawBanner(t);
+  drawPopups(t); drawArrow(t); if (hk < 0.5) drawRimArrows(t); drawBanner(t);
   /* 10. flashes & scope blackout */
   const fτ = t - flash.t0;
   if (fτ >= 0 && fτ < 0.12) {   /* globalAlpha instead of rgba strings */
@@ -2001,16 +2109,57 @@ function drawFrame(dtWall) {
     ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, 0, w, h);
   }
   if (cam.on) { ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(0, 0, w, h); }
-  /* 11. reticle + lit dot */
-  if (!cam.on) { const kz = pp / ppm; ctx.drawImage(reticles[zoom], cx - R * kz, cy - R * kz, 2 * R * kz, 2 * R * kz);   // during the 120 ms ease the mil-dots stay glued to the scene
+  /* 11. reticle + lit dot (the turret dial slides the reticle down inside the tube: crosshair on the target ⇒ bore dial mils above it) */
+  if (!cam.on && hk < 1) { const kz = pp / ppm, dy = dial * pp, rcy = cy + dy; ctx.globalAlpha = 1 - hk;
+    ctx.drawImage(reticles[zoom], cx - R * kz, rcy - R * kz, 2 * R * kz, 2 * R * kz);   // during the 120 ms ease the mil-dots stay glued to the scene
+    if (dy > 0) { ctx.strokeStyle = RET_LINE[COS.reticle]; ctx.lineWidth = COS.reticle === 0 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, rcy - R + 1); ctx.stroke(); }   // extend the top arm to the rim
+    /* scope_wind: amber tick on the horizontal line at the wind hold for the ranged target */
+    windTick.on = SCOPE.windTick && !!rangedTarget && !hip; if (windTick.on) { windTick.mils = -windMils(rangedTarget.d, wind); const tx = cx + windTick.mils * pp;
+      ctx.strokeStyle = '#ffb347'; ctx.fillStyle = '#ffb347'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(tx, rcy - 7); ctx.lineTo(tx, rcy + 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(tx - 4, rcy - 11); ctx.lineTo(tx + 4, rcy - 11); ctx.lineTo(tx, rcy - 6); ctx.closePath(); ctx.fill(); }
     if (holdingBreath()) {
       const pr = 1.5 + 0.5 * (1 + Math.sin(t * 11.5));
-      ctx.fillStyle = breath.phase === 'strain' ? '#ff3b30' : (save.reticle === 2 ? '#3cff7a' : '#ff3b30');
-      ctx.beginPath(); ctx.arc(cx, cy, pr, 0, 6.2832); ctx.fill();
-    } }
-  /* 12. vignette */
-  ctx.drawImage(vignette, 0, 0, w, h);
+      ctx.fillStyle = breath.phase === 'strain' ? '#ff3b30' : (COS.reticle === 2 ? '#3cff7a' : '#ff3b30');
+      ctx.beginPath(); ctx.arc(cx, rcy, pr, 0, 6.2832); ctx.fill();
+    } ctx.globalAlpha = 1; } else windTick.on = false;
+  /* 12. vignette (fades out into the hip view) */
+  if (hk < 1) { ctx.globalAlpha = 1 - hk; ctx.drawImage(vignette, 0, 0, w, h); ctx.globalAlpha = 1; }
   uiFrame();
+}
+const RET_LINE = ['#111', '#111', 'rgba(20,20,20,.6)', '#ff3b30'];
+/* LRF range labels under every visible alive target (scope and hip view) */
+function drawTargetLabels(t, hk) {
+  setFont(hk > 0.5 ? 11 : 12, 500); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#eef2f7'; ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3;
+  const { cx, cy, R } = layout;
+  for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.alive || !T.visible) continue;
+    const p = posAt(T, t), X = sx(1000 * p.x / T.d), Y = sy(1000 * p.y / T.d) + T.h / 2 * 1000 / T.d * V.pp + 4;
+    if (hk < 0.5 && Math.hypot(X - cx, Y - cy) > R - 14) continue;   // inside the tube only
+    if (!GEAR.lrf) continue;
+    ctx.strokeText(T.dLabel, X, Y); ctx.fillText(T.dLabel, X, Y); lrfLabels++; }
+}
+/* hip view dressing: target markers, bird flight paths, wind arrow with value at the top */
+function drawHipExtras(t, hk) {
+  const { w } = layout; ctx.globalAlpha = clamp((hk - 0.5) * 2, 0, 1);
+  ctx.setLineDash(DASH); ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 1;
+  for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.alive || !BIRD_KINDS[T.kind]) continue; const y = sy(1000 * T.y / T.d);
+    ctx.beginPath(); ctx.moveTo(sx(-1000 * T.Xb / T.d), y); ctx.lineTo(sx(1000 * T.Xb / T.d), y); ctx.stroke(); }
+  ctx.setLineDash(NODASH);
+  for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.alive || !T.visible) continue; const p = posAt(T, t), X = sx(1000 * p.x / T.d), Y = sy(1000 * p.y / T.d), r = Math.max(6, T.h / 2 * 1000 / T.d * V.pp + 5);
+    ctx.strokeStyle = T.kind === 'gold' ? '#ffd24a' : '#ffe7a8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X, Y - r); ctx.lineTo(X + r, Y); ctx.lineTo(X, Y + r); ctx.lineTo(X - r, Y); ctx.closePath(); ctx.stroke(); }
+  /* wind arrow */
+  const X = layout.cx - 110, Y = layout.h - 26, len = 16 + 8 * Math.min(6, Math.abs(wind)), dir = wind > 0 ? 1 : -1;   // bottom, left of the range readout
+  ctx.fillStyle = 'rgba(6,8,11,.55)'; ctx.fillRect(X - 70, Y - 14, 140, 28);
+  if (wind !== 0) { ctx.strokeStyle = '#ffb347'; ctx.fillStyle = '#ffb347'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X - dir * len / 2 - 20, Y); ctx.lineTo(X + dir * len / 2 - 20, Y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X + dir * (len / 2 + 6) - 20, Y); ctx.lineTo(X + dir * (len / 2 - 2) - 20, Y - 5); ctx.lineTo(X + dir * (len / 2 - 2) - 20, Y + 5); ctx.closePath(); ctx.fill(); }
+  setFont(13, 500); ctx.textAlign = wind !== 0 ? 'left' : 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#eef2f7'; ctx.fillText(windStr, wind !== 0 ? X + 12 : X, Y);   // no arrow ⇒ centred label
+  ctx.globalAlpha = 1;
+}
+/* HUD wind text: with the anemometer 0.1 m/s incl. gusts live; without it the base wind as an integer and «Екпін!» while a gust blows */
+let windStr = '';
+function windText() {
+  if (wind === 0 && windBase === 0) return S.windNone;
+  if (GEAR.anemo) return `${S.wind} ${wind > 0 ? '→' : '←'} ${fmtMil(Math.abs(wind), 1)} ${S.mps}`;
+  const b = Math.round(windBase), gust = wind !== windBase; if (b === 0 && !gust) return S.windNone;
+  return `${S.wind} ${(b || wind) > 0 ? '→' : '←'} ${Math.abs(b)} ${S.mps}${gust ? ` · ${S.gustWarn}` : ''}`;
 }
 function drawTargetSupport(T, t) {
   if (!T.visible) return;
@@ -2080,19 +2229,24 @@ function drawWindFlag(t) {
 }
 const TR = { az: 0, el: 0 }, DASH = [4, 4], NODASH = [];
 function tracerAt(src, tau, sCap) { const s = Math.min(rangeAt(Math.max(0, tau)), sCap), m = Math.max(s, 1); TR.az = src.azFire + windMils(m, src.wind); TR.el = src.elFire + zeroMils - dropMilsRaw(m); return s; }
+/* tracer colour: finish (cosmetic) and night palette (brighter); gear_tracer lengthens and brightens the streak */
+const TRACER_COL = { finish_default: '#ffe7a8', finish_steel: '#e6efff', finish_gold: '#ffe27a' }, TRACER_GLOW = { finish_default: 'rgba(255,154,60,.4)', finish_steel: 'rgba(150,190,255,.45)', finish_gold: 'rgba(255,210,74,.5)' };
 function drawStreak(src, t, sCap) {
-  const tau = t - src.tFire, s = tracerAt(src, tau, sCap); const x1 = sx(TR.az), y1 = sy(TR.el); tracerAt(src, Math.max(0, tau - 0.04), sCap); const x0 = sx(TR.az), y0 = sy(TR.el);
-  const wd = Math.max(1.2, 4.5 * (1 - s / 1100)) * Math.sqrt(V.pp / 13);
-  ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,154,60,.4)'; ctx.lineWidth = wd + 3; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-  ctx.strokeStyle = '#ffe7a8'; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  const tau = t - src.tFire, s = tracerAt(src, tau, sCap); const x1 = sx(TR.az), y1 = sy(TR.el); tracerAt(src, Math.max(0, tau - (GEAR.tracer ? 0.09 : 0.04)), sCap); const x0 = sx(TR.az), y0 = sy(TR.el);
+  const night = bgCache.pal && bgCache.pal.night, wd = Math.max(1.2, 4.5 * (1 - s / 1100)) * Math.sqrt(V.pp / 13) * (GEAR.tracer || night ? 1.4 : 1);
+  ctx.lineCap = 'round'; ctx.strokeStyle = TRACER_GLOW[COS.finish]; ctx.lineWidth = wd + (night ? 5 : 3); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x1, y1, wd * 0.8, 0, 6.2832); ctx.fill();
 }
 function drawTracer(t) {
   const B = bullet;
   if (B.active) drawStreak(B, t, B.sLand);
+  const mτ = t - tracerMark.t0;
+  if (GEAR.tracer && mτ >= 0 && mτ < 3) { ctx.globalAlpha = mτ > 2.4 ? (3 - mτ) / 0.6 : 1; ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = 1.5; const X = sx(tracerMark.az), Y = sy(tracerMark.el);
+    ctx.beginPath(); ctx.arc(X, Y, 5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X - 8, Y); ctx.lineTo(X - 3, Y); ctx.moveTo(X + 3, Y); ctx.lineTo(X + 8, Y); ctx.moveTo(X, Y - 8); ctx.lineTo(X, Y - 3); ctx.moveTo(X, Y + 3); ctx.lineTo(X, Y + 8); ctx.stroke(); ctx.globalAlpha = 1; }
   if (tail.on) drawStreak(tail, t, tail.sLand);
   else if (!B.active && t < tail.arcUntil && tail.arcS > 0) {
-    ctx.globalAlpha = 0.6 * clamp((tail.arcUntil - t) / 0.8, 0, 1); ctx.strokeStyle = '#ffe7a8'; ctx.lineWidth = 1; ctx.setLineDash(DASH); ctx.beginPath();
+    ctx.globalAlpha = 0.6 * clamp((tail.arcUntil - t) / 0.8, 0, 1); ctx.strokeStyle = TRACER_COL[COS.finish]; ctx.lineWidth = 1; ctx.setLineDash(DASH); ctx.beginPath();
     for (let i = 0; i <= 24; i++) {
       const s = tail.arcS * i / 24, m = Math.max(s, 1);
       const az = tail.azFire + windMils(m, tail.wind), el = tail.elFire + zeroMils - dropMilsRaw(m);
@@ -2133,6 +2287,7 @@ function drawPopups(t) {
     ctx.fillText(p.head, X, Y - (p.bull ? 26 : 22));
     setFont(p.bull ? 26 : 22, 700); ctx.strokeText(p.text, X, Y); ctx.fillText(p.text, X, Y);
     if (p.tag) { setFont(13, 500); ctx.fillStyle = '#eef2f7'; ctx.strokeText(p.tag, X, Y + 15); ctx.fillText(p.tag, X, Y + 15); }
+    if (p.coins) { const cy2 = Y + (p.tag ? 31 : 16); setFont(13, 700); ctx.fillStyle = '#f5c542'; ctx.textAlign = 'left'; ctx.strokeText(p.coins, X - 2, cy2); ctx.fillText(p.coins, X - 2, cy2); drawCoinIcon(ctx, X - 10, cy2 - 5, 6); }
     ctx.globalAlpha = 1; }
 }
 function drawArrow(t) {
@@ -2218,7 +2373,6 @@ function drawBadge(g, rank) {
   }
   else { g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 9 : 22, a = -Math.PI / 2 + i * Math.PI / 5; g.lineTo(48 + Math.cos(a) * r, 48 + Math.sin(a) * r); } g.closePath(); g.fill(); }
 }
-function drawReticlePreview(g, style) { g.fillStyle = '#7f9a6a'; g.fillRect(0, 0, 80, 80); g.fillStyle = '#9fb0c4'; g.fillRect(0, 0, 80, 34); drawReticleInto(g, 40, 40, 40, 20, 8, style); }
 
 /* -- menu panorama */
 const menuLast = { pan: -1, w: 0, h: 0, grad: null };
@@ -2261,14 +2415,14 @@ function onPointerMove(e) {
   const pp = cam.on ? ppm * cam.S : ppm, f = sensF();
   aimTarget.az = clamp(aimTarget.az + dx / pp * f, -40, 40); aimTarget.el = clamp(aimTarget.el - dy / pp * f, -20, 32);
 }
-function onPointerUp(e) { if (drag.on && e.pointerId === drag.id) { drag.on = false; drag.id = -1; } }
+function onPointerUp(e) { if (drag.on && e.pointerId === drag.id) { drag.on = false; drag.id = -1; if (hip && drag.dead && e.type === 'pointerup' && !paused && phase !== 'intro') snapToPoint(e.clientX, e.clientY); } }
 function bindInput() {
   canvas.addEventListener('pointerdown', onPointerDown); canvas.addEventListener('pointermove', onPointerMove);
   canvas.addEventListener('pointerup', onPointerUp); canvas.addEventListener('pointercancel', onPointerUp);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault()); canvas.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('touchmove', (e) => { if (screen === 'play' && !(e.target && e.target.closest && e.target.closest('.tbody, .overlay .card'))) e.preventDefault(); }, { passive: false });
   document.addEventListener('pointerdown', () => { audioInit(); audioResume(); }, { capture: true });
-  canvas.addEventListener('wheel', (e) => { if (screen !== 'play') return; e.preventDefault(); if (wallNow - wheelAt < 150) return; wheelAt = wallNow; if (e.deltaY < 0) setZoom(zoom === 4 ? 8 : zoom === 8 ? 12 : 12); else setZoom(zoom === 12 ? 8 : zoom === 8 ? 4 : 4); }, { passive: false });
+  canvas.addEventListener('wheel', (e) => { if (screen !== 'play') return; e.preventDefault(); if (wallNow - wheelAt < 150) return; wheelAt = wallNow; const zs = SCOPE.zooms, i = zs.indexOf(zoom); setZoom(zs[clamp(i + (e.deltaY < 0 ? 1 : -1), 0, 2)]); }, { passive: false });
   const down = (id, fn) => {
     const el = $(id);
     el.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; e.preventDefault(); audioInit(); audioResume(); fn(e); });
@@ -2276,16 +2430,23 @@ function bindInput() {
   };
   const click = (id, fn) => { $(id).addEventListener('click', (e) => { audioInit(); audioResume(); fn(e); }); };
   /* play controls (pointerdown, one action per press) */
-  down('btnFire', () => { if (waveSkip()) return; if (phase === 'aim' || phase === 'cam') { if (sess.ammo <= 0) { sfx.dryClick(); return; } fireShot(false); } else if (phase === 'flight' && sess.ammo <= 0) sfx.dryClick(); });
+  down('btnFire', () => { if (waveSkip()) return; if (hip) { sfx.deny(); return; } if (phase === 'aim' || phase === 'cam') { if (sess.ammo <= 0) { sfx.dryClick(); return; } fireShot(false); } else if (phase === 'flight' && sess.ammo <= 0) sfx.dryClick(); });
   down('btnBreath', () => breathTap()); down('btnZoom', () => cycleZoom()); down('btnTable', () => toggleTable()); down('btnPause', () => togglePause());
+  down('btnHip', () => { if (!paused) hipToggle(); }); down('btnDialUp', () => { if (!paused) setDial(dial + DIAL_STEP, true); }); down('btnDialDown', () => { if (!paused) setDial(dial - DIAL_STEP, true); });
+  down('btnPauseAmmo', () => useConsumable('use_ammo')); down('btnSecond', () => useConsumable('use_second'));
+  /* shop / loadout */
+  click('btnShop', () => openShop('menu')); click('btnShopBack', () => go(shopFrom === 'loadout' ? 'loadout' : shopFrom));
+  click('btnGear', () => openLoadout('menu')); click('btnLoBack', () => { const f = loadoutFrom; go(f); if (f === 'levels' && loadoutCard) openLevelCard(cardLevel); });
+  click('btnLoShop', () => openShop('loadout')); click('lcGear', () => { hideOverlay('levelCardOverlay'); loadoutCard = true; openLoadout('levels'); });
+  click('resTeaser', () => { const it = resData && resData.teaser; openShop('result', it ? it.cat : 'rifle', it ? it.id : ''); });
+  $('shopGrid').addEventListener('pointerdown', () => { if (buying) buyFinish(); });   // the ceremony is tap-skippable
   /* menu */
   click('btnStart', () => { lockLandscape(); let i = 0; while (i < 12 && save.stars[i] > 0) i++; if (i >= 12) go('levels'); else startLevel(i, { intro: true }); });
   click('btnLevels', () => go('levels')); click('btnHowto', () => showOverlay('howtoOverlay')); click('btnSettings', () => showOverlay('settingsOverlay'));
-  click('btnGear', () => { buildGear(); showOverlay('gearOverlay'); });
-  click('settingsClose', () => hideOverlay('settingsOverlay')); click('howtoClose', () => hideOverlay('howtoOverlay')); click('gearClose', () => hideOverlay('gearOverlay'));
+  click('settingsClose', () => hideOverlay('settingsOverlay')); click('howtoClose', () => hideOverlay('howtoOverlay'));
   click('setSound', () => setMute(!save.mute)); click('setVibe', () => { save.vibe = save.vibe ? 0 : 1; scheduleSave(); refreshSettings(); });
   click('setSens', () => { save.sens = (save.sens + 1) % 3; scheduleSave(); refreshSettings(); }); click('setHand', () => { save.hand = save.hand ? 0 : 1; scheduleSave(); refreshSettings(); positionHUD(); });
-  for (const id of ['settingsOverlay', 'howtoOverlay', 'gearOverlay', 'levelCardOverlay', 'dailyCardOverlay', 'rankupOverlay']) $(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) { if (id === 'rankupOverlay') rankDismiss(); else hideOverlay(id); } });
+  for (const id of ['settingsOverlay', 'howtoOverlay', 'levelCardOverlay', 'dailyCardOverlay', 'rankupOverlay']) $(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) { if (id === 'rankupOverlay') rankDismiss(); else hideOverlay(id); } });
   /* levels */
   click('btnBack', () => go('menu'));
   click('cardEndless', () => { if (save.unlocked >= 7) startMode('endless', { intro: true }); });
@@ -2302,7 +2463,6 @@ function bindInput() {
   down('btnNext', () => resNext()); down('btnRetry', () => { sfx.retryClack(); retryLevel(); });
   down('btnMenu', () => go('menu')); down('btnResLevels', () => go('levels'));
   $('resWrap').addEventListener('pointerdown', (e) => { if (!e.target.closest('button')) resSkip(); });
-  click('unlockBanner', () => { $('unlockBanner').hidden = true; buildGear(); showOverlay('gearOverlay'); });
   click('rankContinue', () => rankDismiss()); $('rankupOverlay').addEventListener('pointerdown', (e) => { if (e.target === e.currentTarget) rankDismiss(); });
   click('btnMute', () => setMute(!save.mute));
   /* keyboard */
@@ -2316,7 +2476,8 @@ function bindInput() {
       if (!$('hint').hidden) hintDismiss();
       if (k === ' ') { e.preventDefault(); if (waveSkip()) return; if (sess.ammo <= 0) sfx.dryClick(); else fireShot(false); }
       else if (k === 'Shift') { if (!shiftHeld) { shiftHeld = true; if (breath.phase === 'normal') breathTap(); } }
-      else if (k === '1') setZoom(4); else if (k === '2') setZoom(8); else if (k === '3') setZoom(12);
+      else if (k === '1') setZoom(SCOPE.zooms[0]); else if (k === '2') setZoom(SCOPE.zooms[1]); else if (k === '3') setZoom(SCOPE.zooms[2]);
+      else if (k === 'v' || k === 'V') hipToggle(); else if (k === ']') setDial(dial + DIAL_STEP, true); else if (k === '[') setDial(dial - DIAL_STEP, true);
       else if (k === 't' || k === 'T') toggleTable();
       else if (k === 'p' || k === 'P') togglePause();
       else if (k === 'Escape') { if (overlay === 'table') toggleTable(false); else togglePause(); }
@@ -2344,16 +2505,17 @@ function bindInput() {
   window.addEventListener('keyup', (e) => { if (e.key === 'Shift') release(); }); window.addEventListener('blur', release);
 }
 function setZoom(z) {
-  if (z === zoom || screen !== 'play') return;
+  if (z === zoom || screen !== 'play' || SCOPE.zooms.indexOf(z) < 0) return;
   if (phase !== 'intro' && !sess.zoomChanged) { sess.zoomChanged = true; chFail('noZoom'); } zoomAnim.from = ppm;
-  zoom = z; ppm = BASE_PPM[zoom] * layout.R / R_REF; zoomAnim.to = ppm; zoomAnim.t0 = wallNow; uiZoom(); sfx.tick();
+  zoom = z; ppm = ppmOf(zoom); zoomAnim.to = ppm; zoomAnim.t0 = wallNow; uiZoom(); sfx.tick(); setDial(dial);   // ×12 caps the turret at 8 mil
 }
-function cycleZoom() { setZoom(zoom === 4 ? 8 : zoom === 8 ? 12 : 4); }
+function cycleZoom() { const zs = SCOPE.zooms, i = zs.indexOf(zoom); setZoom(zs[(i + 1) % zs.length]); }
+function scopeZoom(z) { const i = [4, 8, 12].indexOf(z); return SCOPE.zooms[i < 0 ? 1 : i]; }   // briefing zoom (×4/×8/×12) → the equipped scope's step
 
 /* ==== 9. SCREENS / UI ==== */
-const SCREENS = { menu: 'screenMenu', levels: 'screenLevels', play: 'screenPlay', result: 'screenResult' };
-const APP_OVERLAYS = ['settingsOverlay', 'howtoOverlay', 'gearOverlay', 'levelCardOverlay', 'dailyCardOverlay'];
-let cardLevel = 0, introTimer = 0, hintTimer = 0, pendingToast = '', clickGuardUntil = 0;
+const SCREENS = { menu: 'screenMenu', levels: 'screenLevels', play: 'screenPlay', result: 'screenResult', shop: 'screenShop', loadout: 'screenLoadout' };
+const APP_OVERLAYS = ['settingsOverlay', 'howtoOverlay', 'levelCardOverlay', 'dailyCardOverlay'];
+let cardLevel = 0, introTimer = 0, hintTimer = 0, pendingToast = '', clickGuardUntil = 0, shopFrom = 'menu', loadoutFrom = 'menu', loadoutCard = false;
 /* swallow the ghost click after a pointerdown swapped screens */
 function guardClicks() { clickGuardUntil = performance.now() + 600; }
 document.addEventListener('pointerdown', () => { clickGuardUntil = 0; }, { capture: true });
@@ -2365,25 +2527,32 @@ function go(name) {
   if (screen === 'result' && name !== 'result') { resTimers.forEach(clearTimeout); resTimers = []; resEndState = true; resAnim.on = false; }   // no ceremony leaks onto the next screen
   for (const id of APP_OVERLAYS) $(id).hidden = true;
   for (const k in SCREENS) $(SCREENS[k]).hidden = k !== name;
-  screen = name; overlay = 'none';
-  if (name === 'menu') { refreshMenu(); drawMenu(true); if (rankOf(totalStars()) > save.rankSeen) showRankUp(rankOf(totalStars())); }
+  screen = name; overlay = 'none'; $('app').classList.toggle('on-menu', name === 'menu');
+  if (name === 'menu') { refreshMenu(); drawMenu(true); if (rankOf(save.coinsEarned) > save.rankSeen) showRankUp(rankOf(save.coinsEarned)); }
   else if (name === 'levels') { buildLevels(); }
   else if (name === 'play' && !level) { startLevel(0, { intro: true }); }
+  else if (name === 'shop') buildShop();
+  else if (name === 'loadout') buildLoadout();
+  if (name !== 'play') uiTurret();
 }
+function openShop(from, cat, focusId) { if (from !== 'shop') shopFrom = from || 'menu'; shopCat = cat || shopCat; shopFocus = focusId || ''; go('shop'); }
+function openLoadout(from) { loadoutFrom = from || 'menu'; if (from !== 'levels') loadoutCard = false; go('loadout'); }
 function showOverlay(id) { $(id).hidden = false; overlay = id; }
 function hideOverlay(id) { $(id).hidden = true; overlay = 'none'; }
 
 /* -- menu */
 function refreshMenu() {
-  const r = save.records, stars = totalStars(), rank = rankOf(stars);
+  const r = save.records, stars = totalStars(), ce = save.coinsEarned, rank = rankOf(ce);
   $('recRange').textContent = r.range ? `${fmt(r.range)} ${S.m}` : '—'; $('recStreak').textContent = r.streak ? fmt(r.streak) : '—';
   $('recAcc').textContent = r.acc ? fmtPct(r.acc) : '—'; $('recHits').textContent = r.hits ? fmt(r.hits) : '—';
-  if (rank === 3) { $('rankLine').textContent = `${RANK_NAMES[3]}: ${stars}/36 ★ · ${S.topRank}`; $('rankFill').style.width = '100%'; }
-  else { const lo = RANK_THRESH[rank], hi = RANK_THRESH[rank + 1]; $('rankLine').textContent = `${RANK_NAMES[rank]}: ${stars}/${hi} ★`; $('rankFill').style.width = (100 * (stars - lo) / (hi - lo)).toFixed(1) + '%'; }
-  $('menuFooter').textContent = `${S.level} ${Math.min(12, clearedLevels() + 1)}/12 · ★ ${stars}/36 · ${S.medal} ${totalMedals()}/36`;
+  if (rank === 3) { $('rankLine').textContent = `${RANK_NAMES[3]}: ${fmt(ce)} · ${S.topRank}`; $('rankFill').style.width = '100%'; }
+  else { const lo = RANK_THRESH[rank], hi = RANK_THRESH[rank + 1]; $('rankLine').textContent = `${RANK_NAMES[rank]}: ${fmt(ce)}/${fmt(hi)}`; $('rankFill').style.width = (100 * (ce - lo) / (hi - lo)).toFixed(1) + '%'; }
+  $('menuFooter').textContent = `${S.level} ${Math.min(12, clearedLevels() + 1)}/12 · Баға ★ ${stars}/36 · ${S.medal} ${totalMedals()}/36`;
+  $('menuCoins').textContent = fmt(save.coins); $('shopDot').hidden = !shopHasNew();
   $('desktopHint').hidden = !(window.matchMedia && window.matchMedia('(pointer:fine)').matches);
-  refreshSettings(); refreshMute();
+  refreshSettings(); refreshMute(); lobbyShow(rifleIndexOf(save.loadout.rifle)); lobbyLayout();
 }
+function shopHasNew() { for (const it of ITEMS) if (it.price > 0 && !save.owned[it.id] && it.cat !== 'use' && it.price <= save.coins && it.price > save.shopSeen) return true; return false; }
 function refreshSettings() {
   $('setSound').textContent = save.mute ? S.soundOff : S.soundOn; $('setVibe').textContent = save.vibe ? S.vibeOn : S.vibeOff;
   $('setSens').textContent = S.sens[save.sens]; $('setHand').textContent = S.hand[save.hand]; $('app').classList.toggle('lefty', save.hand === 1);
@@ -2395,22 +2564,10 @@ function buildHowto() {
   box.innerHTML = '';
   S.howto.forEach((line, i) => { const d = mkEl('div', 'howto-line'); const { c, g } = glyphCanvas(24); drawHowtoGlyph(g, i); d.appendChild(c); d.appendChild(mkEl('span', '', line)); box.appendChild(d); });
 }
-function buildGear() {
-  const box = $('gearCards'); box.innerHTML = ''; const stars = totalStars();
-  for (let i = 0; i < 3; i++) {
-    const locked = stars < RETICLE_STARS[i], card = mkEl('div', 'gear-card' + (locked ? ' locked' : ''));
-    const { c, g } = glyphCanvas(80); drawReticlePreview(g, i); card.appendChild(c);
-    card.appendChild(mkEl('div', 'gn', RETICLE_NAMES[i]));
-    card.appendChild(mkEl('div', 'gs', locked ? S.needStars(RETICLE_STARS[i]) : ''));
-    const b = mkEl('button', '', save.reticle === i ? S.selected : S.select); if (save.reticle === i) b.className = 'sel'; b.disabled = locked;
-    b.addEventListener('click', () => { if (locked) return; save.reticle = i; scheduleSave(); bakeReticles(); buildGear(); sfx.tick(); }); card.appendChild(b); box.appendChild(card);
-  }
-}
-
 /* -- level select */
 function buildLevels() {
   const grid = $('lvGrid'); grid.innerHTML = ''; const stars = totalStars();
-  $('lvRank').textContent = `${RANK_NAMES[rankOf(stars)]} ${stars}/36 ★`;
+  $('lvRank').textContent = `${RANK_NAMES[rankOf(save.coinsEarned)]} · ★ ${stars}/36`;
   let nextIdx = -1; for (let i = 0; i < 12; i++) if (save.stars[i] === 0 && i < save.unlocked) { nextIdx = i; break; }
   LEVELS.forEach((L, i) => {
     const locked = i >= save.unlocked, b = mkEl('button', 'lv-card' + (locked ? ' locked' : '') + (i === nextIdx ? ' next' : ''));
@@ -2430,7 +2587,8 @@ function buildLevels() {
 function openLevelCard(i) {
   cardLevel = i; const L = LEVELS[i];
   $('lcTitle').textContent = `${S.level} ${L.id} · ${L.name}`;
-  $('lcObj').innerHTML = `${L.count} нысана · ${L.ammo} оқ${L.timeLimit ? ` · ${L.timeLimit} с` : ''}<span class="cs">${L.card}</span>`;
+  const am = levelAmmo(L, 'level');
+  $('lcObj').innerHTML = `${L.count} нысана · ${am} оқ${am !== L.ammo ? ` (${RIFLE.name})` : ''}${L.timeLimit ? ` · ${L.timeLimit} с` : ''}<span class="cs">${L.card}</span>`;
   $('lcRules').textContent = S.starRules.replace('{2}', L.stars.two).replace('{3}', L.stars.three);
   const box = $('lcChallenges'); box.innerHTML = '';
   L.challenges.forEach((c, k) => { const row = mkEl('div', 'ch-row'); const { c: cv, g } = glyphCanvas(24), pc = parseChallenge(c); drawChallengeGlyph(g, pc.id, 1, pc.n); row.appendChild(cv);
@@ -2454,7 +2612,7 @@ function openDailyCard() {
 /* -- intro */
 function uiIntro(L) {
   const el = $('intro'); el.hidden = false; el.style.opacity = '1'; el.style.pointerEvents = '';
-  if (mode === 'level') { $('introK').textContent = `${S.level} ${L.id}`; $('introName').textContent = L.name; $('introObj').textContent = `${L.count} нысана · ${L.ammo} оқ${L.timeLimit ? ` · ${L.timeLimit} с` : ''}`; }
+  if (mode === 'level') { $('introK').textContent = `${S.level} ${L.id}`; $('introName').textContent = L.name; $('introObj').textContent = `${L.count} нысана · ${levelAmmo(L)} оқ${L.timeLimit ? ` · ${L.timeLimit} с` : ''}`; }
   else if (mode === 'endless') { $('introK').textContent = S.endless; $('introName').textContent = `${S.wave} 1`; $('introObj').textContent = `${L.count} нысана · ${L.ammo} оқ`; }
   else { const dt = new Date(); $('introK').textContent = S.daily; $('introName').textContent = `${dt.getDate()} ${MONTHS[dt.getMonth()]}`; $('introObj').textContent = `${L.count} нысана · ${L.ammo} оқ`; }
   const chs = $('introCh');
@@ -2473,12 +2631,12 @@ function hintTrigger(ev, T) {
   else if (ev === 'ranged' && T) fire = (h === 'hold' && T.d === 200) || (h === 'lead' && T.kind === 'rail') || (h === 'bird' && T.kind === 'bird');
   if (!fire) return;
   hintKind = h; clearTimeout(hintTimer);
-  hintTimer = setTimeout(() => { hintTimer = 0; if (screen !== 'play' || hintKind !== h || !level || level.hint !== h) { hintKind = ''; return; } $('hintText').textContent = S.hints[h]; const e = $('hint'); placeHint(e); e.hidden = false; }, 400);
+  hintTimer = setTimeout(() => { hintTimer = 0; if (screen !== 'play' || hintKind !== h || !level || level.hint !== h) { hintKind = ''; return; } $('hintText').textContent = S.hints[h](); const e = $('hint'); placeHint(e); e.hidden = false; }, 400);
 }
 function hintDismiss() { const e = $('hint'); if (e.hidden) return; e.hidden = true; if (hintKind) { save.hintsSeen[hintKind] = 1; scheduleSave(); } hintKind = ''; sfx.tick(); }
 
 /* -- HUD updaters (DOM touched only on change) */
-const last = { level: '', hits: -1, lvlId: -1, rec: '', ammo: -1, ammoMax: -1, score: -1, wind: NaN, time: -1, range: -1, capT: null, cap: '', fireLock: null, fireEmpty: null, zoom: '', breath: '', ring: -1, flight: -1, tableLive: '', feedback: '' };
+const last = { fireLabel: '', level: '', hits: -1, lvlId: -1, rec: '', ammo: -1, ammoMax: -1, score: -1, wind: NaN, time: -1, range: -1, capT: null, cap: '', fireLock: null, fireEmpty: null, zoom: '', breath: '', ring: -1, flight: -1, tableLive: '', feedback: '' };
 function uiResetHUD(L) {
   last.level = ''; last.hits = -1; last.lvlId = -1; last.rec = ''; last.ammo = -1; last.ammoMax = -1; last.score = -1; last.wind = NaN; last.time = -1; last.range = -1;
   last.cap = ''; last.capT = null; last.fireLock = null; last.fireEmpty = null; last.ring = -1; last.flight = -1; last.tableLive = ''; last.feedback = '';
@@ -2502,7 +2660,7 @@ function uiFrame() {
     for (let i = 0; i < pips.length; i++) pips[i].className = i < sess.ammo ? '' : 'off';
     if (sess.ammo > last.ammoMax && last.ammoMax < 10) { const p = $('ammoPips'); p.innerHTML = ''; const n = Math.min(10, sess.ammo); for (let i = 0; i < n; i++) p.appendChild(mkEl('i')); last.ammoMax = n; } }
   const shownInt = Math.round(sess.shown); if (shownInt !== last.score) { last.score = shownInt; $('hudScore').textContent = `${S.score} ${fmt(shownInt)}`; }
-  if (wind !== last.wind) { last.wind = wind; $('hudWind').textContent = wind === 0 ? S.windNone : `${S.wind} ${wind > 0 ? '→' : '←'} ${fmtMil(Math.abs(wind), Number.isInteger(wind) ? 0 : 1)} ${S.mps}`; }
+  if (wind !== last.wind) { last.wind = wind; windStr = windText(); $('hudWind').textContent = windStr; }
   if (level.timeLimit) {
     const tl = sess.timeLeft == null ? level.timeLimit : sess.timeLeft, ts = Math.max(0, Math.round(tl));
     if (ts !== last.time) { last.time = ts; const e = $('hudTime'); e.textContent = `${S.time} ${fmtTime(ts)}`; e.classList.toggle('low', sess.timeLeft != null && sess.timeLeft <= 10); }
@@ -2517,7 +2675,8 @@ function uiFrame() {
   /* fire button */
   const locked = simTime < lockUntil || bullet.active, empty = sess.ammo <= 0;
   if (locked !== last.fireLock) { last.fireLock = locked; $('btnFire').classList.toggle('locked', locked); }
-  if (empty !== last.fireEmpty) { last.fireEmpty = empty; $('btnFire').classList.toggle('empty', empty); $('fireText').textContent = empty ? S.noAmmo : S.fire; }
+  const fl = hip ? S.enterScope : empty ? S.noAmmo : S.fire;
+  if (empty !== last.fireEmpty || fl !== last.fireLabel) { last.fireEmpty = empty; last.fireLabel = fl; $('btnFire').classList.toggle('empty', empty && !hip); $('fireText').textContent = fl; }
   /* breath ring */
   let ring = 100;
   if (breath.phase === 'hold') ring = 100 * (1 - clamp((simTime - breath.t0) / BREATH.sweet, 0, 1));
@@ -2541,6 +2700,29 @@ function uiOnFire() {
 function uiOnImpact() { last.fireLock = null; }
 function uiFireLock() { last.fireLock = null; last.fireEmpty = null; }
 function uiZoom() { $('btnZoom').textContent = `${zoom}×`; }
+/* -- hip view («Кең көрініс», SHOP-SPEC §4) */
+function hipToggle(on) {
+  if (screen !== 'play' || phase === 'intro') return;
+  const v = on == null ? !hip : !!on; if (v === hip) return;
+  hip = v; hipT0 = wallNow; if (hip) { if (holdingBreath()) breathRelease(); sfx.hipOut(); } else sfx.hipIn();
+  uiHip(); last.fireLock = null; uiFrame();
+}
+function uiHip() { $('btnHip').classList.toggle('on', hip); $('btnFire').classList.toggle('hip', hip); last.fireEmpty = null; last.fireLabel = ''; }
+/* tap-to-snap: the tapped point becomes the aim and the scope closes in (200 ms) */
+function snapToPoint(x, y) {
+  if (!hip) return;
+  const pp = layout.w / HIP_FOV; aim.az = aimTarget.az = clamp(aim.az + (x - layout.cx) / pp, -40, 40); aim.el = aimTarget.el = clamp(aim.el - (y - layout.cy) / pp, -20, 32);
+  hipToggle(false);
+}
+function snapToTarget(id) { const T = targetById(id); if (!T) return false; const p = posAt(T, simTime); aim.az = aimTarget.az = 1000 * p.x / T.d; aim.el = aimTarget.el = 1000 * p.y / T.d; hipToggle(false); return true; }
+/* -- turret scope: 0.5 mil clicks, 0–10 mil (8 at ×12); the reticle slides inside the tube, solve() accounts for it */
+function setDial(v, click) {
+  if (!SCOPE.turret) { dial = 0; uiTurret(); return; }
+  const max = zoom >= 12 ? DIAL_MAX_X12 : DIAL_MAX, nv = clamp(Math.round(v / DIAL_STEP) * DIAL_STEP, 0, max);
+  if (click) { if (nv === dial) { if (v > max) banner(S.dialClamp); sfx.deny(); return; } sfx.dial(); }
+  dial = nv; uiTurret(); last.range = -1;
+}
+function uiTurret() { const on = SCOPE.turret && screen === 'play'; $('hudTurret').hidden = !on; $('btnDialUp').hidden = !SCOPE.turret; $('btnDialDown').hidden = !SCOPE.turret; if (on) $('hudTurret').querySelector('.v').textContent = fmtMil(dial, 1); }
 function uiBreath() {
   const b = $('btnBreath'); b.classList.toggle('hold', breath.phase === 'hold'); b.classList.toggle('strain', breath.phase === 'strain');
   b.classList.toggle('cool', breath.phase === 'release'); last.ring = -1;
@@ -2574,14 +2756,16 @@ function uiToastGust() {
 }
 
 /* -- ballistic table (generated at boot) */
-function buildTable() {
+function buildTable() {   // regenerated on every rifle equip: header, rows, footer all read RIFLE
   const body = $('tableBody'); body.innerHTML = '';
   for (let d = 100; d <= 900; d += 50) {
     const r = mkEl('div', 'tr'); r.dataset.d = d;
     r.innerHTML = `<span>${d}</span><span>${fmtMil(tof(d), 2)}</span><span>${fmtMil(dropMils(d), 1)}</span>`;
     body.appendChild(r);
   }
-  $('tableFoot').innerHTML = `${S.tableLead(fmtMil(leadMils(1), 1))}<br>${S.tableWind(fmtMil(windMils(300, 1), 1))}<br>${S.tableEx}`;
+  $('tableSub').textContent = S.tableSub();
+  $('tableFoot').innerHTML = `${S.tableLead(fmtMil(leadMils(1), 1))}<br>${S.tableWind(fmtMil(windMils(300, 1), 1))}<br>${S.tableEx()}`;
+  last.tableLive = '';
 }
 function toggleTable(force) {
   const open = force == null ? $('tableOverlay').hidden : force; if (screen !== 'play') return;
@@ -2608,6 +2792,7 @@ function togglePause(force) {
   const p = force == null ? !paused : force; if (p === paused) return;
   if (p && overlay === 'table') toggleTable(false);   // close the sheet
   paused = p; $('pauseOverlay').hidden = !p; overlay = p ? 'pause' : 'none'; $('hint').style.visibility = p ? 'hidden' : '';   // a hint card never shows through the dim
+  if (p) { const b = $('btnPauseAmmo'), can = save.inv.use_ammo > 0 && !sess.usedAmmo; b.hidden = !can; if (can) b.textContent = S.plusAmmo(save.inv.use_ammo); }
   if (p) { audioSuspend(); if (holdingBreath()) breathRelease(); } else audioResume();
 }
 
@@ -2651,36 +2836,43 @@ function showResult(res) {
   const ch = $('resCh'); ch.innerHTML = ''; ch.hidden = mode !== 'level' || (failLevel && !sess.challenges.some((c) => c.state === 1));
   if (mode === 'level') sess.challenges.forEach((c) => { const d = mkEl('div', 'chip' + (c.state === 1 ? ' on' : '')); const { c: cv, g } = glyphCanvas(24); drawChallengeGlyph(g, c.id, c.state === 1 ? 1 : 0, c.n); d.appendChild(cv); d.appendChild(mkEl('span', '', challengeText(c.str))); ch.appendChild(d); });
   const next = $('btnNext'); next.hidden = fail || mode !== 'level'; next.textContent = mode === 'level' && levelIndex === 11 ? S.endlessMode : S.next;
-  $('btnRetry').textContent = mode === 'level' ? S.retry : S.again; $('btnRetry').classList.toggle('primary', next.hidden); $('btnResLevels').hidden = false; $('btnMenu').hidden = false;
-  $('unlockBanner').hidden = true;
+  const sec = $('btnSecond'); sec.hidden = !res.secondAvail; if (res.secondAvail) sec.textContent = `${S.second} · ${S.stock(save.inv.use_second)}`;
+  $('btnRetry').textContent = mode === 'level' ? S.retry : S.again; $('btnRetry').classList.toggle('primary', next.hidden && sec.hidden); $('btnResLevels').hidden = false; $('btnMenu').hidden = false;
+  /* coins line («+14 жұлдыз · тигізу 9 · кезең 5 …») counts up with the score; the end bonus flies into the top bar */
+  const rc = $('resCoins'), total = res.coinsRun; rc.className = 'res-coins'; rc.hidden = total <= 0; $('resCoinsN').textContent = S.plusCoins(0);
+  const bd = []; for (const k of COIN_KEYS) if (sess.coins[k]) bd.push(`${S.cc[k]} ${sess.coins[k]}`); $('resCoinsBd').textContent = bd.length ? '· ' + bd.join(' · ') : '';
+  const tz = $('resTeaser'); tz.hidden = true; if (res.teaser) tz.textContent = S.newInShop(res.teaser.name, res.teaser.price) + ' ›';
   go('result');
   if (res.unlockedLevel && (save.unlocked === 4 || save.unlocked === 7)) pendingToast = save.unlocked === 4 ? S.newDaily : S.newEndless;
   /* ceremony timeline (wall ms) */
   const T = (ms, fn) => resTimers.push(setTimeout(fn, ms));
   if (res.clear && mode === 'level') { sfx.levelClear(res.stars === 3); buzz([20, 60, 20, 60, 40]); } else if (mode !== 'level' && res.newBest) sfx.record();
-  resAnim.on = true; resAnim.total = res.total; resAnim.t0 = performance.now() + 150; resAnim.lastTick = 0;   // counted up by frame()
+  resAnim.on = true; resAnim.total = res.total; resAnim.t0 = performance.now() + 150; resAnim.lastTick = 0; resAnim.coins = res.coinsRun;   // counted up by frame()
   if (showStars) for (let i = 0; i < 3; i++) T(1050 + 300 * i, () => { if (i < res.stars) { const s = $('resStars').children[i].firstElementChild; s.classList.add('pop'); sfx.starChime(i); } });
   T(1950, () => { if (res.newBest) { $('resRecord').textContent = S.newRecord; sfx.record(); } });
   for (let i = 0; i < 4; i++) T(2000 + 60 * i, () => { $('resStats').children[i].classList.add('show'); });
+  T(1100, () => { if (res.coinsEnd > 0) { coinFly($('resCoins'), $('coinBar'), res.coinsEnd); setTimeout(() => { coinFx.hold = 0; coinBump(); }, 450); } });
   T(2200, () => resFinal());
 }
-const resAnim = { on: false, t0: 0, total: 0, lastTick: 0 };
+const resAnim = { on: false, t0: 0, total: 0, lastTick: 0, coins: 0 };
 function resCount(now) {
   if (resEndState || screen !== 'result') { resAnim.on = false; return; }
   const u = clamp((now - resAnim.t0) / 900, 0, 1);
   $('resScore').textContent = fmt(Math.round(resAnim.total * outQuad(u)));
+  if (resAnim.coins > 0) { $('resCoinsN').textContent = S.plusCoins(Math.round(resAnim.coins * outQuad(u))); if (u > 0.05) $('resCoins').classList.add('show'); }
   if (now - resAnim.lastTick >= 40 && u < 1) { resAnim.lastTick = now; sfx.scoreTick(u); }
   if (u >= 1) { resAnim.on = false; $('resBonus').classList.add('show'); }
 }
 function resFinal() {
   if (resEndState || screen !== 'result') return; resEndState = true; resAnim.on = false; const res = resData; resTimers.forEach(clearTimeout); resTimers = [];
-  $('resScore').textContent = fmt(res.total); $('resBonus').classList.add('show');
+  $('resScore').textContent = fmt(res.total); $('resBonus').classList.add('show'); coinFx.hold = 0;
+  if (res.coinsRun > 0) { $('resCoinsN').textContent = S.plusCoins(res.coinsRun); $('resCoins').classList.add('show'); }
   if (!$('resStars').hidden) for (let i = 0; i < 3; i++) { const s = $('resStars').children[i].firstElementChild; if (i < res.stars) s.classList.add('show'); }
   if (res.newBest) $('resRecord').textContent = S.newRecord;
   for (let i = 0; i < 4; i++) $('resStats').children[i].classList.add('show');
   const chips = $('resCh').children; let anyOn = false; for (let i = 0; i < chips.length; i++) { chips[i].classList.add('show'); if (chips[i].classList.contains('on')) anyOn = true; } if (anyOn) sfx.challengeDone();
-  if (res.rankUp) showRankUp(rankOf(totalStars()));
-  else if (res.unlockedReticle > 0) { const b = $('unlockBanner'); b.textContent = `${S.newReticle}: ${RETICLE_NAMES[res.unlockedReticle]}`; b.hidden = false; }
+  if (res.teaser) $('resTeaser').hidden = false;
+  if (res.rankUp) showRankUp(rankOf(save.coinsEarned));
 }
 function resSkip() { if (!resEndState) resFinal(); }
 function resNext() {
@@ -2702,7 +2894,7 @@ function diagnosis() {
 /* -- rank ceremony (§8.C11) */
 let rankShown = 0;
 function showRankUp(rank) {
-  rankShown = rank; $('rankName').textContent = RANK_NAMES[rank]; $('rankStars').textContent = S.starsCollected(totalStars());
+  rankShown = rank; $('rankName').textContent = RANK_NAMES[rank]; $('rankStars').textContent = S.coinsCollected(save.coinsEarned);
   const c = $('rankBadge'), d = Math.min(2, window.devicePixelRatio || 1); c.width = 96 * d; c.height = 96 * d; const g = c.getContext('2d'); g.scale(d, d); drawBadge(g, rank);
   $('rankupOverlay').hidden = false; overlay = 'rankup'; sfx.fanfare(); buzz([30, 50, 30, 50, 30, 50, 80]);
 }
@@ -2711,7 +2903,233 @@ function rankDismiss() {
   $('rankupOverlay').hidden = true;
   overlay = 'none';
   if (rankShown > save.rankSeen) { save.rankSeen = rankShown; scheduleSave(); } if (screen === 'menu') refreshMenu();
-  if (screen === 'result' && resData && resData.unlockedReticle > 0) { const b = $('unlockBanner'); b.textContent = `${S.newReticle}: ${RETICLE_NAMES[resData.unlockedReticle]}`; b.hidden = false; }
+}
+
+/* ==== 9b. ECONOMY UI: SHOP («Дүкен») · LOADOUT («Жабдық») · LOBBY · CONSUMABLES (SHOP-SPEC §2–3) ==== */
+let shopCat = 'rifle', shopFocus = '', buying = null, buyTimers = [];
+function isOwned(id) { return !!save.owned[id]; }
+function slotOf(it) { return it.cat === 'rifle' ? 'rifle' : it.cat === 'scope' ? 'scope' : it.cat === 'cos' ? (it.sub === 'finish' ? 'finish' : it.sub === 'ret' ? 'reticle' : 'palette') : null; }
+function isEquipped(id) { const it = ITEM_BY_ID[id], slot = it && slotOf(it); return !!slot && save.loadout[slot] === id; }
+function equipItem(id) {
+  const it = ITEM_BY_ID[id], slot = it && slotOf(it); if (!slot || !isOwned(id)) return false;
+  if (save.loadout[slot] === id) return true;
+  save.loadout[slot] = id; applyLoadout(); afterEquip(slot); scheduleSave(); return true;
+}
+function afterEquip(slot) {   // everything derived from the loadout is rebuilt here
+  if (slot === 'rifle') buildTable();
+  if (slot === 'scope') { if (SCOPE.zooms.indexOf(zoom) < 0) { zoom = scopeZoom(level ? level.zoom : 8); ppm = ppmOf(zoom); zoomAnim.t0 = -1; uiZoom(); } bakeReticles(); setDial(dial); uiTurret(); }
+  if (slot === 'reticle') bakeReticles();
+  if (slot === 'palette' && level) ensureBackground(level);
+  if (screen === 'play') drawFrame(0);
+}
+function buyItem(id) {   // pure transaction; false when not affordable / already owned
+  const it = ITEM_BY_ID[id]; if (!it || save.coins < it.price || (it.cat !== 'use' && isOwned(id))) return false;
+  save.coins -= it.price;
+  if (it.cat === 'use') save.inv[id] = Math.min(99, (save.inv[id] || 0) + 1); else save.owned[id] = 1;
+  if (it.cat === 'gear') applyLoadout();
+  scheduleSave(); return true;
+}
+/* -- shop screen */
+function buildShop() {
+  save.shopSeen = Math.max(save.shopSeen, save.coins); scheduleSave();
+  const cats = $('shopCats'); cats.innerHTML = '';
+  for (const [id, name] of SHOP_CATS) { const b = mkEl('button', 'cat-btn' + (id === shopCat ? ' on' : '')); b.setAttribute('data-testid', 'shop-cat-' + id); const { c, g } = glyphCanvas(24); drawCatGlyph(g, id); b.appendChild(c); b.appendChild(mkEl('span', '', name));
+    b.addEventListener('click', () => { if (buying) buyFinish(); shopCat = id; shopFocus = ''; buildShop(); sfx.tick(); }); cats.appendChild(b); }
+  const grid = $('shopGrid'); grid.innerHTML = ''; grid.scrollTop = 0;
+  for (const it of ITEMS) if (it.cat === shopCat) grid.appendChild(itemCard(it));
+  if (shopFocus) { const el = grid.querySelector(`[data-id="${shopFocus}"]`); if (el) { el.classList.add('eq'); el.scrollIntoView({ block: 'nearest' }); } }
+  uiCoins(true);
+}
+function itemCard(it) {
+  const card = mkEl('div', 'item' + (isEquipped(it.id) ? ' eq' : '')); card.dataset.id = it.id; card.setAttribute('data-testid', 'shop-item-' + it.id);
+  const head = mkEl('div', 'head'); const { c, g } = glyphCanvas(56); c.className = 'ic'; drawItemIcon(g, it); head.appendChild(c);
+  const txt = mkEl('div'); txt.style.minWidth = '0'; txt.appendChild(mkEl('div', 'nm', it.name)); txt.appendChild(mkEl('div', 'fx', it.fx)); head.appendChild(txt); card.appendChild(head);
+  const row = mkEl('div', 'row'), price = mkEl('div', 'price');
+  if (it.price > 0) price.innerHTML = `<svg class="coin sm"><use href="#coinSym"/></svg><span class="num">${fmt(it.price)}</span>`; else { price.className = 'price free'; price.textContent = S.free; }
+  row.appendChild(price);
+  if (it.cat === 'use') row.appendChild(mkEl('div', 'stock', S.stock(save.inv[it.id] || 0)));
+  const b = mkEl('button', 'ibtn'); b.setAttribute('data-testid', 'shop-buy-' + it.id); const st = itemState(it); b.classList.add(st);
+  b.textContent = st === 'buy' ? (it.cat === 'use' && save.inv[it.id] ? S.buyN(save.inv[it.id] + 1) : S.buy) : st === 'need' ? S.need(it.price - save.coins) : st === 'apply' ? S.apply : st === 'eq' ? S.inUse : S.ownedP;
+  b.addEventListener('click', () => { if (buying) buyFinish(); const s2 = itemState(it);
+    if (s2 === 'buy') buyStart(card, it); else if (s2 === 'need') { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); sfx.deny(); buzz(20); }
+    else if (s2 === 'apply') { equipItem(it.id); buildShop(); sfx.tick(); } else sfx.tick(); });
+  row.appendChild(b); card.appendChild(row); return card;
+}
+function itemState(it) {   // buy | need | apply | eq | own
+  if (it.cat === 'use' || !isOwned(it.id)) return save.coins >= it.price ? 'buy' : 'need';
+  return slotOf(it) ? (isEquipped(it.id) ? 'eq' : 'apply') : 'own';
+}
+/* purchase ceremony (≤ 1.2 s, tap-skippable): flip + gold flash, coin fly-out, chime, haptic, stamp, then the auto-equip prompt */
+function buyStart(card, it) {
+  if (!buyItem(it.id)) return;
+  uiCoins(); coinFly($('coinBar'), card, 6); sfx.buy(); buzz([20, 40, 20, 40, 60]);
+  card.classList.add('buying'); buying = { card, it };
+  buyTimers.push(setTimeout(() => { if (buying && buying.card === card) card.appendChild(mkEl('div', 'stamp', S.bought)); }, 180));
+  buyTimers.push(setTimeout(buyFinish, 900));
+}
+function buyFinish() {
+  if (!buying) return; buyTimers.forEach(clearTimeout); buyTimers = []; const { card, it } = buying; buying = null;
+  if (screen !== 'shop' || !card.parentNode) return;
+  const fresh = itemCard(it); card.parentNode.replaceChild(fresh, card);
+  if ((it.cat === 'rifle' || it.cat === 'scope') && !isEquipped(it.id)) {   // «Бірден қолдану» — default yes
+    const row = fresh.querySelector('.row'); const ask = mkEl('div', 'ask');
+    const yes = mkEl('button', 'ibtn buy', S.equipNow); yes.setAttribute('data-testid', 'shop-equip-now'); yes.addEventListener('click', () => { equipItem(it.id); buildShop(); sfx.tick(); });
+    const no = mkEl('button', 'ibtn', S.later); no.setAttribute('data-testid', 'shop-equip-later'); no.addEventListener('click', () => { buildShop(); sfx.tick(); });
+    ask.appendChild(yes); ask.appendChild(no); row.replaceWith(ask); yes.focus({ preventScroll: true });
+  }
+  if (screen === 'menu') refreshMenu();
+}
+/* -- loadout screen */
+function rifleBarsHTML(it) {
+  const bars = [[`${S.rifleBars[0]} ${it.v0} м/с`, it.v0 / 950], [`${S.rifleBars[1]} ${fmtMil(it.bolt, 1)} с`, it.bolt / 1.7], [S.rifleBars[2], it.recoil / 2.1]];
+  return bars.map(([k, f]) => `<div class="bar"><span>${k}</span><i><b style="width:${Math.round(100 * f)}%"></b></i><span></span></div>`).join('');
+}
+function buildLoadout() {
+  const body = $('loBody'); body.innerHTML = '';
+  const cap = (k) => body.appendChild(mkEl('div', 'lo-cap', S.loSec[k]));
+  const btn = (it) => { const b = mkEl('button', 'ibtn' + (isEquipped(it.id) ? ' eq' : ''), isEquipped(it.id) ? S.inUse : S.apply); b.setAttribute('data-testid', 'lo-equip-' + it.id); b.addEventListener('click', () => { equipItem(it.id); buildLoadout(); sfx.tick(); }); return b; };
+  cap('rifle'); let row = mkEl('div', 'lo-row');
+  for (const it of ITEMS) if (it.cat === 'rifle' && isOwned(it.id)) { const c = mkEl('div', 'lo-card' + (isEquipped(it.id) ? ' eq' : '')); c.innerHTML = `<div class="nm">${it.name}</div>${rifleBarsHTML(it)}`; c.appendChild(btn(it)); row.appendChild(c); }
+  body.appendChild(row);
+  cap('scope'); row = mkEl('div', 'lo-row');
+  for (const it of ITEMS) if (it.cat === 'scope' && isOwned(it.id)) { const c = mkEl('div', 'lo-card' + (isEquipped(it.id) ? ' eq' : '')); c.innerHTML = `<div class="nm">${it.name}</div><div class="sub">${S.zoomsOf(it.zooms)}${it.turret ? ' · турель' : it.windTick ? ' · жел торабы' : ''}</div>`; c.appendChild(btn(it)); row.appendChild(c); }
+  body.appendChild(row);
+  cap('cos');
+  for (const sub of ['finish', 'ret', 'pal']) { row = mkEl('div', 'lo-row');
+    for (const it of ITEMS) if (it.cat === 'cos' && it.sub === sub) { const own = isOwned(it.id), b = mkEl('button', 'chipbtn' + (isEquipped(it.id) ? ' eq' : '') + (own ? '' : ' lock')); b.setAttribute('data-testid', 'lo-cos-' + it.id);
+      const { c, g } = glyphCanvas(32); drawItemIcon(g, it, 32); b.appendChild(c); b.appendChild(mkEl('span', '', own ? it.name : `${it.name} · ${it.price}`));
+      b.addEventListener('click', () => { if (own) { equipItem(it.id); buildLoadout(); sfx.tick(); } else openShop('loadout', 'cos', it.id); }); row.appendChild(b); }
+    body.appendChild(row); }
+  cap('gear'); let list = mkEl('div', 'lo-list');
+  for (const it of ITEMS) if (it.cat === 'gear') { const own = isOwned(it.id), l = mkEl('div', 'lo-line' + (own ? ' on' : ' off')); l.setAttribute('data-testid', 'lo-gear-' + it.id);
+    l.innerHTML = `<span class="tick">${own ? '✓' : ''}</span><span class="t">${it.name} — ${it.fx}</span><span class="s">${own ? S.ownedP : `${S.shop}: ${it.price}`}</span>`; list.appendChild(l); }
+  body.appendChild(list);
+  cap('use'); list = mkEl('div', 'lo-list');
+  for (const it of ITEMS) if (it.cat === 'use') { const n = save.inv[it.id] || 0, l = mkEl('div', 'lo-line' + (n ? ' on' : ' off')); l.setAttribute('data-testid', 'lo-use-' + it.id); l.innerHTML = `<span class="tick">${n || ''}</span><span class="t">${it.name} — ${it.fx}</span><span class="s">${S.stock(n)}</span>`; list.appendChild(l); }
+  body.appendChild(list); body.scrollTop = 0;
+  uiCoins(true);
+}
+/* -- consumables from pause / fail (SHOP-SPEC §2.4) */
+function useConsumable(id) {
+  if (id === 'use_ammo') {
+    if (screen !== 'play' || !paused || save.inv.use_ammo <= 0 || sess.usedAmmo || phase === 'intro') return false;
+    save.inv.use_ammo--; sess.usedAmmo = true; sess.ammo += 3; chFail('onlyN'); scheduleSave(); $('btnPauseAmmo').hidden = true;
+    last.fireEmpty = null; uiFrame(); sfx.wave(); return true;
+  }
+  if (id === 'use_second') { if (screen !== 'result') return false; const ok = !!(resData && resData.secondAvail); if (ok) resumeSecond(); return ok; }
+  return false;
+}
+/* -- procedural icons (canvas): categories, items, coin */
+function drawCoinIcon(g, x, y, r) {
+  g.save(); g.fillStyle = '#a8741a'; g.beginPath(); g.arc(x, y + 1, r, 0, 6.2832); g.fill(); g.fillStyle = '#f5c542'; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill();
+  g.fillStyle = '#a8741a'; g.beginPath(); for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * 0.28 : r * 0.62, a = -Math.PI / 2 + i * Math.PI / 5; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fill(); g.restore();
+}
+function drawCatGlyph(g, id) {
+  g.clearRect(0, 0, 24, 24); g.strokeStyle = '#eef2f7'; g.fillStyle = '#eef2f7'; g.lineWidth = 1.8; g.lineCap = 'round'; g.lineJoin = 'round';
+  switch (id) {
+    case 'rifle': g.beginPath(); g.moveTo(2, 13); g.lineTo(15, 13); g.lineTo(15, 10); g.lineTo(22, 10); g.moveTo(9, 13); g.lineTo(8, 18); g.moveTo(15, 13); g.lineTo(17, 17); g.stroke(); break;
+    case 'scope': g.strokeRect(3, 9, 18, 7); g.beginPath(); g.moveTo(12, 6); g.lineTo(12, 9); g.moveTo(7, 9); g.lineTo(7, 16); g.moveTo(17, 9); g.lineTo(17, 16); g.stroke(); break;
+    case 'gear': g.beginPath(); g.moveTo(12, 4); g.lineTo(12, 12); g.lineTo(5, 20); g.moveTo(12, 12); g.lineTo(19, 20); g.moveTo(8, 9); g.lineTo(16, 9); g.stroke(); break;
+    case 'use': g.beginPath(); g.moveTo(9, 20); g.lineTo(9, 9); g.arc(12, 9, 3, Math.PI, 0); g.lineTo(15, 20); g.closePath(); g.fill(); break;
+    case 'cos': g.beginPath(); g.moveTo(5, 19); g.lineTo(15, 5); g.lineTo(19, 9); g.lineTo(9, 19); g.closePath(); g.stroke(); g.beginPath(); g.arc(6, 19, 2, 0, 6.2832); g.fill(); break;
+  }
+}
+function drawItemIcon(g, it, size) {
+  const W = size || 56, k = W / 56; g.clearRect(0, 0, W, W); g.save(); g.scale(k, k); g.lineCap = 'round'; g.lineJoin = 'round';
+  const col = it.col || '#eef2f7';
+  if (it.cat === 'rifle') { drawRifle(g, 56, 56, it.id, COS.finish, 'scope_std', false, 0.9); }
+  else if (it.cat === 'scope') { g.fillStyle = '#3b4048'; g.fillRect(6, 24, 44, 10); g.fillStyle = '#5a6270'; g.fillRect(12, 22, 6, 14); g.fillRect(38, 22, 6, 14); g.fillStyle = '#7fb0ff'; g.beginPath(); g.ellipse(6, 29, 3, 5.5, 0, 0, 6.2832); g.fill();
+    if (it.id === 'scope_far') { g.fillStyle = '#3b4048'; g.fillRect(2, 21, 10, 16); g.fillStyle = '#7fb0ff'; g.beginPath(); g.ellipse(3, 29, 3, 7, 0, 0, 6.2832); g.fill(); }
+    if (it.turret) { g.fillStyle = '#c9ced6'; g.fillRect(24, 12, 10, 12); g.strokeStyle = '#3b4048'; g.lineWidth = 1; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(25 + i * 2.6, 13); g.lineTo(25 + i * 2.6, 17); g.stroke(); } }
+    if (it.windTick) { g.strokeStyle = '#ffb347'; g.lineWidth = 2; g.beginPath(); g.moveTo(20, 44); g.lineTo(44, 44); g.moveTo(36, 40); g.lineTo(36, 48); g.stroke(); } }
+  else if (it.id === 'gear_bipod') { g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.moveTo(10, 16); g.lineTo(46, 16); g.moveTo(28, 16); g.lineTo(14, 46); g.moveTo(28, 16); g.lineTo(42, 46); g.moveTo(20, 34); g.lineTo(36, 34); g.stroke(); }
+  else if (it.id === 'gear_breath') { g.strokeStyle = col; g.lineWidth = 2.5; g.beginPath(); g.ellipse(20, 32, 8, 14, 0.3, 0, 6.2832); g.stroke(); g.beginPath(); g.ellipse(36, 32, 8, 14, -0.3, 0, 6.2832); g.stroke(); g.beginPath(); g.moveTo(28, 10); g.lineTo(28, 24); g.stroke(); }
+  else if (it.id === 'gear_lrf') { g.fillStyle = '#3b4048'; g.fillRect(8, 20, 26, 18); g.fillStyle = '#7fb0ff'; g.fillRect(30, 24, 6, 10); g.strokeStyle = '#ff3b30'; g.lineWidth = 2; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(38, 29); g.lineTo(52, 29); g.stroke(); g.setLineDash([]); g.fillStyle = col; g.font = '700 9px sans-serif'; g.fillText('m', 12, 33); }
+  else if (it.id === 'gear_anemo') { g.strokeStyle = col; g.lineWidth = 2.5; g.beginPath(); g.moveTo(28, 26); g.lineTo(28, 48); g.stroke(); for (let i = 0; i < 3; i++) { const a = i * 2.094 - 1.57, x = 28 + Math.cos(a) * 12, y = 26 + Math.sin(a) * 12; g.beginPath(); g.moveTo(28, 26); g.lineTo(x, y); g.stroke(); g.beginPath(); g.arc(x, y, 4.5, 0, 6.2832); g.stroke(); } }
+  else if (it.id === 'gear_tracer') { g.strokeStyle = 'rgba(255,154,60,.5)'; g.lineWidth = 7; g.beginPath(); g.moveTo(8, 42); g.lineTo(44, 16); g.stroke(); g.strokeStyle = '#ffe7a8'; g.lineWidth = 3; g.beginPath(); g.moveTo(8, 42); g.lineTo(44, 16); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(44, 16, 4, 0, 6.2832); g.fill(); }
+  else if (it.id === 'use_ammo') { g.fillStyle = '#c9a227'; for (let i = 0; i < 3; i++) { const x = 14 + i * 14; g.beginPath(); g.moveTo(x - 4, 46); g.lineTo(x - 4, 20); g.arc(x, 20, 4, Math.PI, 0); g.lineTo(x + 4, 46); g.closePath(); g.fill(); g.fillStyle = '#8a6d1c'; g.fillRect(x - 4, 40, 8, 6); g.fillStyle = '#c9a227'; } }
+  else if (it.id === 'use_second') { g.strokeStyle = '#58d68d'; g.lineWidth = 3.5; g.beginPath(); g.arc(28, 28, 14, 0.6, 5.6); g.stroke(); g.fillStyle = '#58d68d'; g.beginPath(); g.moveTo(40, 12); g.lineTo(44, 24); g.lineTo(32, 22); g.closePath(); g.fill(); }
+  else if (it.sub === 'finish') { g.fillStyle = it.col; g.beginPath(); g.moveTo(14, 44); g.lineTo(36, 10); g.lineTo(46, 18); g.lineTo(24, 48); g.closePath(); g.fill(); g.fillStyle = '#2a2622'; g.beginPath(); g.arc(14, 46, 5, 0, 6.2832); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(30, 16, 4, 14); }
+  else if (it.sub === 'ret') { g.fillStyle = '#7f9a6a'; g.fillRect(0, 0, 56, 56); g.fillStyle = '#9fb0c4'; g.fillRect(0, 0, 56, 24); drawReticleInto(g, 28, 28, 28, 14, 8, it.style); }
+  else if (it.sub === 'pal') { const key = it.pal || 'dala', pal = PALETTES[key]; const gr = g.createLinearGradient(0, 0, 0, 56); gr.addColorStop(0, pal.skyTop); gr.addColorStop(0.6, pal.skyHor); g.fillStyle = gr; g.fillRect(0, 0, 56, 56); g.fillStyle = pal.ground; g.fillRect(0, 36, 56, 20);
+    if (key === 'tun') { g.fillStyle = '#f4f0dc'; g.beginPath(); g.arc(38, 16, 8, 0, 6.2832); g.fill(); g.fillStyle = pal.skyTop; g.beginPath(); g.arc(41, 14, 7, 0, 6.2832); g.fill(); } else { g.fillStyle = key === 'ymyrt' ? '#ffd08a' : '#fff3c4'; g.beginPath(); g.arc(38, key === 'ymyrt' ? 34 : 16, 8, 0, 6.2832); g.fill(); } }
+  g.restore();
+}
+/* Rifle silhouettes for the lobby stage, the loadout and the shop icons. Local frame: 100 × 40 units, muzzle at x = 0. */
+const FINISH_COLS = { finish_default: { body: '#7a6142', metal: '#3b4048', accent: '#f2b544' }, finish_steel: { body: '#2b3138', metal: '#1f242a', accent: '#b8c6d6' }, finish_gold: { body: '#c9a227', metal: '#4a3a10', accent: '#ffd24a' } };
+function drawRifle(g, W, H, rifleId, finishId, scopeId, locked, fit) {
+  const s = (fit || 0.9) * W / 100, C = locked ? { body: '#1a2033', metal: '#1a2033', accent: '#2a3350' } : (FINISH_COLS[finishId] || FINISH_COLS.finish_default);
+  g.save(); g.translate((W - 100 * s) / 2, H / 2 - 4 * s); g.scale(s, s); g.lineJoin = 'round'; g.lineCap = 'round';
+  const barrel = (y, len, th) => { g.fillStyle = C.metal; g.fillRect(0, y - th / 2, len, th); };
+  const rect = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  if (rifleId === 'rifle_svd') {   /* long thin barrel, slotted flash hider, skeleton stock */
+    barrel(0, 52, 2.4); rect(0, -2.2, 8, 4.4, C.metal); g.fillStyle = C.body; for (let i = 0; i < 3; i++) g.fillRect(1.5 + i * 2, -1.5, 1, 3);
+    rect(30, -3.5, 22, 7, C.body); rect(52, -4, 22, 8, C.metal);   // handguard + receiver
+    g.fillStyle = C.metal; g.beginPath(); g.moveTo(58, 4); g.quadraticCurveTo(57, 12, 63, 14); g.lineTo(66, 13); g.quadraticCurveTo(62, 10, 63, 4); g.closePath(); g.fill();   // curved magazine
+    g.beginPath(); g.moveTo(70, 4); g.lineTo(69, 12); g.lineTo(73, 12); g.lineTo(74, 4); g.closePath(); g.fill();   // pistol grip
+    g.strokeStyle = C.body; g.lineWidth = 3; g.beginPath(); g.moveTo(74, -3); g.lineTo(98, -5); g.lineTo(98, 6); g.lineTo(90, 6); g.lineTo(74, 3); g.closePath(); g.stroke();   // skeleton frame
+    g.lineWidth = 1.5; g.beginPath(); g.moveTo(82, -2); g.lineTo(95, -1); g.stroke();
+  } else if (rifleId === 'rifle_338') {   /* bolt action, heavy barrel, sporting stock with cheek riser */
+    barrel(0, 56, 3.6); rect(0, -2.4, 5, 4.8, C.metal);
+    g.fillStyle = C.body; g.beginPath(); g.moveTo(34, -3); g.lineTo(60, -3.5); g.lineTo(76, -4); g.lineTo(98, -6); g.lineTo(99, 5); g.lineTo(88, 7); g.lineTo(78, 5); g.lineTo(66, 8); g.lineTo(60, 4); g.lineTo(34, 3); g.closePath(); g.fill();
+    rect(56, -5, 18, 8, C.metal); rect(60, 3, 8, 6, C.metal);   // receiver + box magazine
+    g.strokeStyle = C.metal; g.lineWidth = 2.2; g.beginPath(); g.moveTo(70, -3); g.lineTo(74, 4); g.stroke(); g.fillStyle = C.metal; g.beginPath(); g.arc(74.5, 4.5, 1.8, 0, 6.2832); g.fill();   // bolt handle
+    rect(80, -8, 14, 3, C.body);   // cheek riser
+  } else if (rifleId === 'rifle_50') {   /* very heavy barrel, muzzle brake, bipod, tall stock with monopod */
+    barrel(6, 56, 5); rect(0, -4.5, 9, 9, C.metal); g.fillStyle = C.body; for (let i = 0; i < 3; i++) g.fillRect(1.5 + i * 2.4, -3.5, 1.2, 7);
+    rect(34, -6, 40, 12, C.metal); rect(60, 5, 10, 7, C.metal); rect(74, -5, 24, 10, C.body); rect(90, 5, 6, 8, C.metal);   // receiver, magazine, stock, monopod
+    g.strokeStyle = C.metal; g.lineWidth = 2; g.beginPath(); g.moveTo(40, 5); g.lineTo(34, 18); g.moveTo(40, 5); g.lineTo(46, 18); g.stroke();   // bipod
+    g.beginPath(); g.moveTo(66, 4); g.lineTo(64, 12); g.lineTo(69, 12); g.lineTo(70, 4); g.closePath(); g.fillStyle = C.metal; g.fill();   // grip
+  } else {   /* semi-auto: shorter barrel, gas block, big box magazine, adjustable stock */
+    barrel(0, 40, 2.6); rect(22, -4, 5, 8, C.metal); rect(28, -3.5, 24, 7, C.body); rect(52, -5, 22, 9, C.metal);
+    g.fillStyle = C.metal; g.beginPath(); g.moveTo(58, 4); g.lineTo(56, 16); g.lineTo(65, 16); g.lineTo(66, 4); g.closePath(); g.fill();   // box magazine
+    g.beginPath(); g.moveTo(70, 4); g.lineTo(69, 12); g.lineTo(73, 12); g.lineTo(74, 4); g.closePath(); g.fill();
+    rect(74, -2, 12, 4, C.metal); rect(84, -5, 14, 10, C.body);   // buffer tube + stock
+  }
+  /* mounted scope: rail + rings + tube; length and fittings per scope */
+  const sc = ITEM_BY_ID[scopeId] || ITEM_BY_ID.scope_std, x0 = rifleId === 'rifle_auto' ? 50 : 54, len = sc.id === 'scope_far' ? 34 : 26, y = -12;
+  rect(x0 - 2, -7, len + 4, 2, C.metal); rect(x0 + 4, y - 1, 3, 6, C.metal); rect(x0 + len - 7, y - 1, 3, 6, C.metal);
+  rect(x0, y - 2.5, len, 5, C.metal); rect(x0 - 3, y - 3.5, 6, 7, C.metal); if (sc.id === 'scope_far') rect(x0 - 6, y - 4.5, 8, 9, C.metal);
+  g.fillStyle = locked ? '#2a3350' : '#7fb0ff'; g.beginPath(); g.ellipse(x0 + len, y, 1.4, 2.2, 0, 0, 6.2832); g.fill();
+  if (sc.turret) { rect(x0 + len / 2 - 3, y - 8, 6, 6, C.accent); g.fillStyle = C.metal; for (let i = 0; i < 3; i++) g.fillRect(x0 + len / 2 - 2 + i * 1.8, y - 7.5, 0.7, 2); }
+  else rect(x0 + len / 2 - 2, y - 5, 4, 3, C.metal);
+  if (sc.windTick) { rect(x0 + len / 2 + 3, y - 1.5, 5, 3, C.accent); }
+  if (locked) { g.fillStyle = '#2a3350'; g.fillRect(44, 20, 12, 10); g.strokeStyle = '#2a3350'; g.lineWidth = 2.5; g.beginPath(); g.arc(50, 20, 4, Math.PI, 0); g.stroke(); }
+  g.restore();
+}
+/* -- lobby: the equipped rifle on the main menu; ‹ › and swipes cycle every rifle in shop order */
+const RIFLES = ITEMS.filter((it) => it.cat === 'rifle'); let lobbyIdx = -1;
+function rifleIndexOf(id) { for (let i = 0; i < RIFLES.length; i++) if (RIFLES[i].id === id) return i; return 0; }
+function lobbyShow(i) {
+  lobbyIdx = ((i % RIFLES.length) + RIFLES.length) % RIFLES.length; const it = RIFLES[lobbyIdx], owned = isOwned(it.id);
+  if (owned && save.loadout.rifle !== it.id) { save.loadout.rifle = it.id; applyLoadout(); buildTable(); scheduleSave(); sfx.bolt(); }   // owned ⇒ equipped on arrival
+  $('rifleName').textContent = it.name; $('rifleStats').hidden = !owned; $('rifleLocked').hidden = owned; if (!owned) $('rifleLockPrice').textContent = fmt(it.price);
+  if (owned) $('rifleStats').innerHTML = rifleBarsHTML(it);
+  const dots = $('rifleDots'); dots.innerHTML = ''; RIFLES.forEach((r, k) => dots.appendChild(mkEl('i', (isOwned(r.id) ? 'on' : '') + (k === lobbyIdx ? ' cur' : ''))));
+  drawLobbyRifle();
+}
+function lobbyStep(d) { lobbyShow(lobbyIdx + d); sfx.tick(); }
+function lobbyLayout() {   // stage canvas sized from the column (no vh): called on resize and menu entry
+  const st = $('stage'), c = $('rifleCanvas'), w = st.clientWidth || 300, h = st.clientHeight || 150, d = layout.dpr || 1;
+  if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+  drawLobbyRifle();
+}
+function drawLobbyRifle() {
+  if (screen !== 'menu' || lobbyIdx < 0) return; const c = $('rifleCanvas'), d = layout.dpr || 1, w = c.width / d, h = c.height / d, g = c.getContext('2d'); if (!w || !h) return;
+  g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h); const it = RIFLES[lobbyIdx], owned = isOwned(it.id);
+  const rg = g.createRadialGradient(w / 2, h * 0.6, 10, w / 2, h * 0.6, w * 0.5); rg.addColorStop(0, 'rgba(242,181,68,.16)'); rg.addColorStop(1, 'rgba(242,181,68,0)'); g.fillStyle = rg; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(w / 2, h * 0.72, w * 0.36, h * 0.06, 0, 0, 6.2832); g.fill();   // ground shadow
+  const fit = Math.min(0.82, 0.82 * (h / (w * 0.46))); drawRifle(g, w, h, it.id, COS.finish, owned ? save.loadout.scope : 'scope_std', !owned, fit);
+}
+const stageSwipe = { x: 0, on: false };
+function bindLobby() {
+  const st = $('stage');
+  st.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; stageSwipe.on = true; stageSwipe.x = e.clientX; });
+  st.addEventListener('pointerup', (e) => { if (!stageSwipe.on) return; stageSwipe.on = false; const dx = e.clientX - stageSwipe.x; if (Math.abs(dx) >= 40) lobbyStep(dx < 0 ? 1 : -1); });
+  st.addEventListener('pointercancel', () => { stageSwipe.on = false; });
+  const down = (id, fn) => { $(id).addEventListener('click', () => { audioInit(); audioResume(); fn(); }); };
+  down('btnRiflePrev', () => lobbyStep(-1)); down('btnRifleNext', () => lobbyStep(1));
+  down('btnRifleShop', () => { const it = RIFLES[lobbyIdx]; openShop('menu', 'rifle', it.id); });
 }
 
 /* ==== 10. AUDIO ==== */
@@ -2793,7 +3211,13 @@ const RECIPES = {
     [523, 659, 784, 1047].forEach((f) => tone('triangle', f, 0, 0.9, 0.12, 0.48));
     noise(0.4, 0.08, 'highpass', 6000, 0, 1, 0.48);
   },
-  gustChime() { tone('triangle', 660, 880, 0.08, 0.2); }
+  gustChime() { tone('triangle', 660, 880, 0.08, 0.2); },
+  coin() { tone('sine', 1760, 0, 0.07, 0.12); tone('sine', 2637, 0, 0.09, 0.1, 0.05); },
+  buy() { [659, 830, 988].forEach((f, i) => tone('triangle', f, 0, 0.18, 0.3, 0.08 * i)); tone('sine', 1976, 0, 0.3, 0.15, 0.24); },   // ascending triad
+  deny() { tone('sine', 140, 110, 0.14, 0.25); },
+  dial() { noise(0.008, 0.3, 'bandpass', 2600, 0, 5); tone('square', 900, 0, 0.02, 0.08); },
+  hipOut() { noise(0.12, 0.15, 'lowpass', 900, 300, 1); tone('sine', 520, 380, 0.12, 0.1); },
+  hipIn() { noise(0.1, 0.15, 'lowpass', 400, 1200, 1); tone('sine', 380, 560, 0.1, 0.1); }
 };
 const sfx = {};
 for (const k in RECIPES) sfx[k] = function (a, b) { if (!actx || save.mute) return; try { RECIPES[k](a, b); } catch (e) { /* audio errors never break the game */ } };
@@ -2814,20 +3238,30 @@ function state() {
   for (let i = 0; i < targets.length; i++) { const T = targets[i]; if (!T.mandatory && !T.alive) continue; const p = posAt(T, simTime), v = velAt(T, simTime);
     list.push({ id: T.id, kind: T.kind, d: T.d, x: p.x, y: p.y, vx: v.vx, vy: v.vy, w: T.w, h: T.h, alive: T.alive, mandatory: T.mandatory }); }
   return { screen, mode, levelIndex, wave, paused, tableOpen: overlay === 'table', phase, ammo: sess.ammo, score: sess.score, hits: sess.hits, misses: sess.misses, shots: sess.shots,
-    streak: sess.streak, mult: clamp(sess.streak, 1, 4), timeScale, cam: cam.on, timeLeft: sess.timeLeft, targets: list, aim: { az: aim.az, el: aim.el }, zoom, ppm, wind,
+    streak: sess.streak, mult: clamp(sess.streak, 1, 4), timeScale, cam: cam.on, timeLeft: sess.timeLeft, targets: list, aim: { az: aim.az, el: aim.el }, zoom, ppm: hip ? layout.w / HIP_FOV : ppm, wind,
     holdingBreath: holdingBreath(), breath: { phase: breath.phase, t: simTime - breath.t0 }, lastShot: sess.lastShot,
-    challenges: sess.challenges.map((c) => ({ id: c.str, state: c.state })), gold: { active: sess.goldState === 1, tGold: sess.tGold }, perf: { retryMs: perf.retryMs, fps: perf.fps } };
+    challenges: sess.challenges.map((c) => ({ id: c.str, state: c.state })), gold: { active: sess.goldState === 1, tGold: sess.tGold }, perf: { retryMs: perf.retryMs, fps: perf.fps },
+    hip, dial, coins: save.coins, coinsEarned: save.coinsEarned, windTick: { on: windTick.on, mils: windTick.mils }, lrfLabels, hipView: { cx: layout.cx, cy: layout.cy, ppm: layout.w / HIP_FOV, w: layout.w, h: layout.h },
+    loadout: { rifle: RIFLE.id, scope: SCOPE.id, zooms: SCOPE.zooms.slice(), turret: SCOPE.turret, windTick: SCOPE.windTick, gear: { bipod: GEAR.bipod, breath: GEAR.breath, lrf: GEAR.lrf, anemo: GEAR.anemo, tracer: GEAR.tracer },
+      swayMult: sway.mult, breathSweet: BREATH.sweet, breathCooldown: BREATH.cooldown, v0: RIFLE.v0, kWind: RIFLE.kWind, bolt: RIFLE.bolt, recoil: RIFLE.recoil, ammoMod: RIFLE.ammoMod, finish: COS.finish, reticle: save.loadout.reticle, palette: COS.palette },
+    inv: { use_ammo: save.inv.use_ammo, use_second: save.inv.use_second }, usedAmmo: sess.usedAmmo, usedSecond: sess.usedSecond };
 }
 window.__sniper = {
   version: VERSION, seed, state,
   startLevel: (i) => startLevel(clamp(i | 0, 0, 11), { intro: false }),
   startMode: (m) => startMode(m === 'daily' ? 'daily' : 'endless', { intro: false }),
   setAim, setSway, solve,
-  fire: () => { const r = fireShot(true) || { hit: false, targetId: null, impact: null, t: 0 }; if (screen === 'play') uiFrame(); return r; },
+  fire: () => { const r0 = fireShot(true); if (r0 === null && hip) return null; const r = r0 || { hit: false, targetId: null, impact: null, t: 0 }; if (screen === 'play') uiFrame(); return r; },   // hip view: null, ammo untouched
   step: stepMs,
-  ballistics: { timeOfFlight: tof, dropMils, dropMilsRaw, leadMils, windMils, rangeAt, zeroMils, V0, K_DRAG, G, Z0, K_WIND },
+  ballistics: { timeOfFlight: tof, dropMils, dropMilsRaw, leadMils, windMils, rangeAt, get zeroMils() { return zeroMils; }, get V0() { return RIFLE.v0; }, K_DRAG, G, Z0, K_WIND, get kWind() { return K_WIND * RIFLE.kWind; }, rifle: RIFLE, scope: SCOPE },
   rewards: { qBull, grade: gradeHit, nearMiss: nearMissOf, points: pointsFor, rankOf, dailySeed, dateKey, waveParams },
-  levels: LEVELS, screens: { go }, validation: validateLevels()
+  levels: LEVELS, screens: { go },
+  /* SHOP-SPEC §6: shop and hip draw nothing from the gameplay PRNG */
+  shop: { items: ITEMS, balance: () => save.coins, earn: (n) => { earnCoins(n); uiCoins(); if (screen === 'menu') refreshMenu(); return save.coins; }, buy: (id) => { const ok = buyItem(id); if (ok) { uiCoins(); if (screen === 'shop') buildShop(); if (screen === 'menu') refreshMenu(); } return ok; },
+    equip: (id) => { const ok = equipItem(id); if (ok) { if (screen === 'shop') buildShop(); if (screen === 'loadout') buildLoadout(); if (screen === 'menu') refreshMenu(); } return ok; }, owned: () => Object.keys(save.owned).filter((k) => save.owned[k]), save: () => save },
+  hip: (on) => { hipToggle(on == null ? !hip : !!on); return hip; }, dial: (m) => { setDial(+m || 0); return dial; }, snapTo: (id) => snapToTarget(id), useConsumable,
+  lobby: { next: () => { lobbyStep(1); return lobbyIdx; }, prev: () => { lobbyStep(-1); return lobbyIdx; }, index: () => lobbyIdx, rifles: RIFLES.map((r) => r.id) },
+  validation: validateLevels()
 };
 
 /* -- main loop: one rAF, dt ≤ 50 ms, ≤ 16 ms sub-steps */
@@ -2836,6 +3270,7 @@ function frame(now) {
   wallNow = now; let dtWall = now - lastWall; lastWall = now; if (!(dtWall >= 0)) dtWall = 0; if (dtWall > 50) dtWall = 50;
   perf.frames++; perf.acc += dtWall; if (perf.acc >= 1000) { perf.fps = Math.round(perf.frames * 1000 / perf.acc); perf.frames = 0; perf.acc = 0; }
   if (document.hidden) return;
+  uiCoins();
   if (layout.h > layout.w) { if (screen === 'play' && phase !== 'intro') togglePause(true); return; }   // portrait: rotate prompt is up, nothing runs
   if (screen === 'play') {
     if (paused) return;
@@ -2849,7 +3284,7 @@ function frame(now) {
 
 /* -- viewer hot-update hook (CONTRACT §2) */
 function start(saved) {
-  loadSave(); buildHowto(); buildTable(); refreshSettings(); refreshMute(); bindInput(); resize(); ensureAtlas();
+  loadSave(); buildHowto(); buildTable(); refreshSettings(); refreshMute(); bindInput(); bindLobby(); resize(); ensureAtlas(); uiCoins(true); uiTurret();
   window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 50));
   document.addEventListener('visibilitychange', () => { if (document.hidden) { if (screen === 'play' && phase !== 'intro') togglePause(true); writeSave(); } else { lastWall = performance.now(); } });
   window.addEventListener('pagehide', writeSave);
