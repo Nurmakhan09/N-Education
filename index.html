@@ -738,7 +738,8 @@ const SWAY_A = [0.5, 0.65, 0.8];   // peak mil by level group
 const BREATH = { ramp: 0.4, sweet: 3.0, strain: 4.0, held: 0.15, strainTo: 1.6, gasp: 1.3, recover: 1.0, cooldown: 2.5 };   // sweet/strain/cooldown re-set by applyLoadout()
 const PPM_PER_X = 1.625, BASE_PPM = { 4: 6.5, 8: 13, 12: 19.5 };   // px per mil at R = 186 (BASE_PPM: the briefing zooms used by the fit rule)
 const R_REF = 186;
-const STRIP_PPM = 20, STRIP_AZ = 70, STRIP_EL_TOP = 12, STRIP_EL_BOT = -35; // background strip in mil space
+const STRIP_PPM = 24, STRIP_AZ = 70, STRIP_EL_TOP = 12, STRIP_EL_BOT = -35; // background strip in mil space (24 px/mil: crisp up to ×12, soft at ×20)
+const PARALLAX = 0.035;   // the far layer pans 3.5 % less than the world (ART-SPEC §2)
 const SENS = [0.6, 1.0, 1.4];
 const RANK_THRESH = [0, 120, 350, 700];   // lifetime coins («жұлдыз») needed for rank i (SHOP-SPEC §1)
 const RANK_NAMES = ['Үйренуші', 'Мерген', 'Сұңқар', 'Қыран Көз'];
@@ -1800,21 +1801,41 @@ const mkEl = (tag, cls, text) => { const e = document.createElement(tag); if (cl
 const canvas = $('game'), ctx = canvas.getContext('2d', { alpha: false });
 const layout = { w: 390, h: 844, cx: 195, cy: 400, R: 186, dpr: 1, landscape: false };
 const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* Palettes: one sun per palette (light = unit vector the shadows fall along, screen x/y), sky stops, ground tones, grass tones, dressing colours.
+   dala: warm day (sun upper-left) · qys: winter (grey sky, blue shadows) · ymyrt: dusk (sun low right, long shadows) · tau: mountains (cool) · tun: night (moon upper-right, cosmetic). */
 const PALETTES = {
-  dala:  { skyTop: '#4f86d3', skyHor: '#cfe0ef', far: '#9fb0c4', mid: '#7f9a6a', ground: '#b9a866', stripe: '#a4924f', haze: '#d9dfd0', hazeK: [0.55, 0.42, 0.3, 0.2, 0.1, 0], base: '#a4924f', snow: false, hazeExtra: 0 },
-  qys:   { skyTop: '#b9c7d6', skyHor: '#eef2f6', far: '#d8dfe6', mid: '#c3ccd6', ground: '#eef1f4', stripe: '#cdd6e0', haze: '#e6ebf0', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#dfe5ea', snow: true, hazeExtra: 0 },
-  ymyrt: {
-    skyTop: '#2a2f5e', skyHor: '#e8875a', band: '#f2b26b', far: '#3a3550', mid: '#2b2740', ground: '#6e5a4a', stripe: '#574539', haze: '#8a6f62', hazeK: [0.5, 0.38, 0.26, 0.16, 0.08, 0], base: '#574539', snow: false, hazeExtra: 0.1 },
-  tau:   {
-    skyTop: '#4e79b8', skyHor: '#a9c6e8', far: '#e9eef3', farShadow: '#8ea3bc', mid: '#5f7d5a', ground: '#8b8470', stripe: '#7a7466', haze: '#a9b3b6', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#7a7466', snow: false, hazeExtra: 0 },
-  tun:   {   /* «Түн»: cosmetic night override — dark sky, moon, brighter tracer */
-    skyTop: '#070a1a', skyHor: '#22304f', far: '#141a2c', mid: '#1b2233', ground: '#3a3f4a', stripe: '#2c3039', haze: '#2a3448', hazeK: [0.5, 0.4, 0.3, 0.2, 0.1, 0], base: '#2c3039', snow: false, hazeExtra: 0.15, night: true }
+  dala:  { skyTop: '#3c74c4', skyMid: '#79aadf', skyHor: '#d9e7ef', far: '#8d9fb6', farSnow: null, mid: '#6d8c58', mid2: '#86a066', ground: '#b3a15f', groundFar: '#c6bc8c', haze: '#d6dfd8', hazeK: 0.55,
+    grass: ['#8d9143', '#a89e50', '#6e7c36'], stone: '#8f8a78', shrub: '#4e6b34', road: '#a6905f', base: '#a08e4c', snow: false, hazeExtra: 0, shimmer: true, sun: { az: -30, el: 9.2, r: 2.2, col: '#fff6d0', glow: 'rgba(255,238,180,.6)' }, light: [0.55, 0.3], shadow: 0.36,
+    cloud: { lit: '#ffffff', shade: '#c4d1e0', n: 5 }, cirrus: 'rgba(255,255,255,.35)', tree: '#3f6a34', treeLit: '#6f9a4a', night: false },
+  qys:   { skyTop: '#9fb0c2', skyMid: '#c2ceda', skyHor: '#eef2f6', far: '#cfd8e2', farSnow: '#f2f5f8', mid: '#b9c4d0', mid2: '#cfd8e2', ground: '#e9eef3', groundFar: '#dfe6ee', haze: '#e6ebf0', hazeK: 0.5,
+    grass: ['#a9b2bd', '#8e97a3', '#c5ccd5'], stone: '#7d8591', shrub: '#4a4640', road: '#c8d0da', base: '#dfe5ea', snow: true, hazeExtra: 0, shimmer: false, sun: null, light: [0.5, 0.25], shadow: 0.22, shadowCol: 'rgba(60,80,130,.45)',
+    cloud: { lit: '#f4f6f9', shade: '#b8c3d0', n: 4 }, cirrus: 'rgba(255,255,255,.25)', tree: '#3d3a36', treeLit: '#5a5650', night: false },
+  ymyrt: { skyTop: '#2a2f5e', skyMid: '#7a4f7a', skyHor: '#ec8c58', band: '#f6b86c', far: '#3a3550', farSnow: null, mid: '#2b2740', mid2: '#3a3350', ground: '#6e5a48', groundFar: '#8b6f5e', haze: '#8a6f62', hazeK: 0.5,
+    grass: ['#4a3a2c', '#5e4a36', '#3a2c22'], stone: '#3e3128', shrub: '#2a2220', road: '#7a6250', base: '#574539', snow: false, hazeExtra: 0.1, shimmer: false, sun: { az: 18, el: 0.9, r: 3.2, col: '#ffd58a', glow: 'rgba(255,170,90,.55)' }, light: [-0.95, 0.12], shadow: 0.42,
+    cloud: { lit: '#f8b48a', shade: '#6a4a6e', n: 4 }, cirrus: 'rgba(255,190,140,.35)', tree: '#1e1a22', treeLit: '#2e2630', night: false },
+  tau:   { skyTop: '#4670b0', skyMid: '#83a9d8', skyHor: '#b7cfe8', far: '#e4eaf1', farShadow: '#8ea3bc', farSnow: '#f7f9fb', mid: '#587a58', mid2: '#6d8f66', ground: '#8a8570', groundFar: '#a4a698', haze: '#adb6b8', hazeK: 0.5,
+    grass: ['#7c8656', '#9a9a6a', '#5f6e44'], stone: '#8a8478', shrub: '#3e5a3a', road: '#8f8874', base: '#7a7466', snow: false, hazeExtra: 0, shimmer: true, sun: { az: -34, el: 10.5, r: 1.8, col: '#fffaf0', glow: 'rgba(255,255,240,.5)' }, light: [0.5, 0.3], shadow: 0.34,
+    cloud: { lit: '#ffffff', shade: '#b9c8da', n: 4 }, cirrus: 'rgba(255,255,255,.4)', tree: '#284a2e', treeLit: '#4a7a48', night: false },
+  tun:   { skyTop: '#05081a', skyMid: '#0f1a3a', skyHor: '#233457', far: '#121a2c', farSnow: null, mid: '#182033', mid2: '#1e2840', ground: '#353a46', groundFar: '#2c3448', haze: '#2a3448', hazeK: 0.5,
+    grass: ['#2a3140', '#343c4c', '#202634'], stone: '#3c414c', shrub: '#161a24', road: '#3f4450', base: '#2c3039', snow: false, hazeExtra: 0.15, shimmer: false, sun: { az: 26, el: 9, r: 1.9, moon: true, col: '#f4f0dc', glow: 'rgba(200,210,255,.35)' }, light: [-0.45, 0.25], shadow: 0.3, shadowCol: 'rgba(0,4,20,.5)',
+    cloud: { lit: '#3a4664', shade: '#141a2c', n: 3 }, cirrus: 'rgba(120,140,190,.25)', tree: '#0e1220', treeLit: '#182036', night: true }
 };
 /* palette in effect for a level: the cosmetic override wins (SHOP-SPEC §2.5) */
 function paletteFor(L) { const it = ITEM_BY_ID[COS.palette]; return it && it.pal ? it.pal : L.palette; }
 function mix(a, b, k) { const c = (h, i) => parseInt(h.slice(i, i + 2), 16); return `rgb(${[1, 3, 5].map((i) => Math.round(lerp(c(a, i), c(b, i), k))).join(',')})`; }   // bake-time only
+function rgba(hex, a) { const c = (i) => parseInt(hex.slice(i, i + 2), 16); return `rgba(${c(1)},${c(3)},${c(5)},${a})`; }
+function shade(hex, k) { const c = (i) => clamp(Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 + k)), 0, 255); return `rgb(${c(1)},${c(3)},${c(5)})`; }   // k < 0 darker, > 0 lighter
 function mkCanvas(w, h, dpr) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * dpr)); c.height = Math.max(1, Math.round(h * dpr)); return c; }
-
+/* fixed-seed noise tile, reused as a pattern by every bake (never per frame) */
+let noiseTile = null;
+function noisePattern(g) {
+  if (!noiseTile) { noiseTile = mkCanvas(128, 128, 1); const n = noiseTile.getContext('2d'), img = n.createImageData(128, 128), r = mulberry32(31), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { const v = 96 + Math.round(r() * 96 + r() * 32); d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } n.putImageData(img, 0, 0); }
+  return g.createPattern(noiseTile, 'repeat');
+}
+/* soft radial blob helper (bake-time) */
+function blob(g, x, y, rx, ry, col, edge) { const rg = g.createRadialGradient(x, y, 0, x, y, 1); rg.addColorStop(0, col); rg.addColorStop(edge == null ? 0.6 : edge, col); rg.addColorStop(1, col[0] === '#' ? rgba(col, 0) : col.replace(/,[^,]*\)$/, ',0)'));
+  g.save(); g.translate(x, y); g.scale(rx, ry); g.fillStyle = rg; g.beginPath(); g.arc(0, 0, 1, 0, 6.2832); g.fill(); g.restore(); }
 /* -- layout / resize (§4) */
 function resize() {
   const app = $('app'), w = app.clientWidth || window.innerWidth, h = app.clientHeight || window.innerHeight;
@@ -1958,113 +1979,165 @@ function ensureAtlas() {
 }
 function sprite(g, name, dx, dy, dw, dh) { const s = SPR[name]; g.drawImage(atlas, s.x * atlasDpr, s.y * atlasDpr, s.w * atlasDpr, s.h * atlasDpr, dx, dy, dw, dh); }
 
-/* -- background strip in mil space (once per level palette) */
-const strips = {};
+/* -- scenery in mil space, baked once per palette (ART-SPEC §2): three layers so the sky can parallax and the clouds can drift.
+   far:    el STRIP_EL_TOP … FAR_BOT   sky dressing, sun/moon, cirrus, far mountains, mid hills
+   cloud:  el STRIP_EL_TOP … CLOUD_BOT cumulus on a transparent layer (drawn twice, wrapping)
+   ground: el GROUND_TOP … STRIP_EL_BOT steppe floor with perspective-correct dressing
+   Geometry: a point on the ground at s metres sits at el = -H_EYE·1000/s; an object h metres tall spans h·1000/s mil. */
+const FAR_BOT = -1.5, CLOUD_BOT = 1.5, GROUND_TOP = 0.35;
+const strips = {}, stripOrder = [];
+function bakeStrip(key) {
+  const pal = PALETTES[key], S = STRIP_PPM, W = 2 * STRIP_AZ * S, r = mulberry32(77 + PALETTE_ORDER.indexOf(key) * 101), night = !!pal.night, winter = !!pal.snow;
+  const X = (az) => (az + STRIP_AZ) * S, ge = (s) => -1500 / s, mil = (m, s) => 1000 * m / s;
+  const lx = pal.light[0], ly = pal.light[1], shCol = pal.shadowCol || `rgba(20,14,6,${pal.shadow})`;
+  /* ---------- far layer ---------- */
+  const Hf = (STRIP_EL_TOP - FAR_BOT) * S, far = mkCanvas(W, Hf, 1), f = far.getContext('2d'), Y = (el) => (STRIP_EL_TOP - el) * S;
+  f.clearRect(0, 0, W, Hf);
+  /* sun / moon with glow (ghost flares are drawn per frame) */
+  if (pal.sun) { const sun = pal.sun, sx0 = X(sun.az), sy0 = Y(sun.el);
+    blob(f, sx0, sy0, sun.r * S * 5, sun.r * S * 5, sun.glow, 0.05); blob(f, sx0, sy0, sun.r * S * 2.2, sun.r * S * 2.2, sun.glow, 0.3);
+    f.fillStyle = sun.col; f.beginPath(); f.arc(sx0, sy0, sun.r * S, 0, 6.2832); f.fill();
+    if (sun.moon) { f.fillStyle = pal.skyTop; f.beginPath(); f.arc(sx0 + sun.r * S * 0.42, sy0 - sun.r * S * 0.18, sun.r * S * 0.86, 0, 6.2832); f.fill();
+      f.fillStyle = 'rgba(180,180,200,.18)'; for (let i = 0; i < 5; i++) { f.beginPath(); f.arc(sx0 - sun.r * S * 0.5 + r() * sun.r * S * 0.6, sy0 - sun.r * S * 0.5 + r() * sun.r * S, (0.06 + r() * 0.12) * sun.r * S, 0, 6.2832); f.fill(); } }
+    else { f.fillStyle = 'rgba(255,255,255,.55)'; f.beginPath(); f.arc(sx0, sy0, sun.r * S * 0.55, 0, 6.2832); f.fill(); } }
+  if (night) { for (let i = 0; i < 260; i++) { const s = 0.4 + r() * 1.3, a = 0.35 + r() * 0.65; f.fillStyle = `rgba(${r() < 0.2 ? '200,215,255' : '255,250,235'},${a})`; f.fillRect(X(-STRIP_AZ + r() * 2 * STRIP_AZ), Y(1.2 + r() * 10.8), s, s); }
+    /* milky band */ f.fillStyle = 'rgba(120,140,200,.06)'; for (let i = 0; i < 40; i++) f.fillRect(X(-STRIP_AZ + r() * 140), Y(3 + r() * 9), 3 + r() * 30, 1 + r() * 2); }
+  /* high cirrus: long thin streaks */
+  for (let i = 0; i < 7; i++) { const cx0 = X(-STRIP_AZ + r() * 2 * STRIP_AZ), cy0 = Y(6.5 + r() * 5), w = (6 + r() * 14) * S, h = (0.12 + r() * 0.16) * S; blob(f, cx0, cy0, w, h, pal.cirrus, 0.2); blob(f, cx0 + w * 0.5, cy0 + h * 1.2, w * 0.6, h * 0.8, pal.cirrus, 0.2); }
+  /* dusk band of colour + horizon glow */
+  if (pal.band) { const bg = f.createLinearGradient(0, Y(3), 0, Y(0)); bg.addColorStop(0, 'rgba(246,184,108,0)'); bg.addColorStop(1, 'rgba(246,184,108,.55)'); f.fillStyle = bg; f.fillRect(0, Y(3), W, 3 * S); }
+  /* mountains: jagged ridges with snow caps and heavy haze; hills: rolling with tree clusters */
+  const ridge = (col, base, amp, n, seed, jag, snowCol, snowLine, hazeMix) => {
+    const pts = []; let ph = seed; for (let i = 0; i <= n; i++) { const az = -STRIP_AZ + 2 * STRIP_AZ * i / n; ph += 0.7 + r() * 0.9;
+      const el = base + amp * (0.45 + 0.35 * Math.sin(i * 0.9 + seed) + 0.2 * Math.sin(i * 2.3 + seed * 1.7) + jag * (r() - 0.5)); pts.push([X(az), Y(Math.max(base, el))]); }
+    const path = () => { f.beginPath(); f.moveTo(0, Y(base - 3)); f.lineTo(0, pts[0][1]); for (const p of pts) f.lineTo(p[0], p[1]); f.lineTo(W, Y(base - 3)); f.closePath(); };
+    path(); f.fillStyle = hazeMix ? mix(col, pal.haze, hazeMix) : col; f.fill();
+    /* lit / shaded facets: every other segment gets a lighter or darker overlay */
+    for (let i = 1; i < pts.length; i++) { const up = pts[i][1] < pts[i - 1][1]; f.fillStyle = (up === (lx < 0)) ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)'; f.beginPath(); f.moveTo(pts[i - 1][0], pts[i - 1][1]); f.lineTo(pts[i][0], pts[i][1]); f.lineTo(pts[i][0], Y(base - 3)); f.lineTo(pts[i - 1][0], Y(base - 3)); f.closePath(); f.fill(); }
+    if (snowCol) { f.save(); path(); f.clip(); const sg = f.createLinearGradient(0, Y(snowLine + 1.2), 0, Y(snowLine - 0.4)); sg.addColorStop(0, snowCol); sg.addColorStop(1, rgba(snowCol, 0)); f.fillStyle = sg; f.fillRect(0, 0, W, Y(snowLine - 0.4)); f.restore(); }
+    /* haze veil over the base */
+    const hg = f.createLinearGradient(0, Y(base + amp * 0.5), 0, Y(base)); hg.addColorStop(0, rgba('#ffffff', 0)); hg.addColorStop(1, hazeMix ? rgba('#ffffff', 0.18) : rgba('#ffffff', 0.08)); f.save(); path(); f.clip(); f.fillStyle = hg; f.fillRect(0, 0, W, Hf); f.restore();
+  };
+  const hills = (col, base, amp, n, seed, trees) => {
+    const pts = []; for (let i = 0; i <= n; i++) { const az = -STRIP_AZ + 2 * STRIP_AZ * i / n; const el = base + amp * (0.5 + 0.35 * Math.sin(i * 0.55 + seed) + 0.15 * Math.sin(i * 1.7 + seed * 2.1) + 0.1 * (r() - 0.5)); pts.push([X(az), Y(Math.max(base, el))]); }
+    f.beginPath(); f.moveTo(0, Y(base - 2)); for (const p of pts) f.lineTo(p[0], p[1]); f.lineTo(W, Y(base - 2)); f.closePath(); const g2 = f.createLinearGradient(0, Y(base + amp), 0, Y(base)); g2.addColorStop(0, shade(col, 0.12)); g2.addColorStop(1, mix(col, pal.haze, 0.35)); f.fillStyle = g2; f.fill();
+    if (trees) for (let i = 0; i < trees; i++) { const k = Math.floor(r() * (pts.length - 2)) + 1, x0 = pts[k][0], y0 = pts[k][1] + r() * amp * S * 0.5, n2 = 3 + Math.floor(r() * 6), sz = (0.12 + r() * 0.18) * S;
+      for (let j = 0; j < n2; j++) { const tx = x0 + (j - n2 / 2) * sz * 1.4, ty = y0 + (r() - 0.5) * sz; f.fillStyle = mix(pal.tree, pal.haze, 0.25); f.beginPath(); f.ellipse(tx, ty, sz, sz * 1.5, 0, 0, 6.2832); f.fill(); f.fillStyle = mix(pal.treeLit, pal.haze, 0.3); f.beginPath(); f.ellipse(tx - sz * 0.25 * Math.sign(lx || 1), ty - sz * 0.5, sz * 0.5, sz * 0.7, 0, 0, 6.2832); f.fill(); } }
+  };
+  if (key === 'tau') { ridge(pal.farShadow, 0.6, 10, 26, 0.4, 0.5, pal.farSnow, 4.5, 0.55); ridge(pal.far, 0.4, 7.5, 34, 1.9, 0.45, pal.farSnow, 3.6, 0.3); ridge('#b9c7d4', 0.2, 4.6, 44, 3.1, 0.35, '#eef3f7', 2.8, 0.15); hills(pal.mid, 0, 1.7, 70, 5.2, 30); }
+  else if (key === 'ymyrt') { ridge(pal.far, 0.3, 2.6, 36, 0.7, 0.4, null, 0, 0.35); ridge(mix(pal.far, pal.mid, 0.5), 0.15, 1.6, 50, 2.9, 0.3, null, 0, 0.15); hills(pal.mid, 0, 0.9, 70, 2.2, 14); }
+  else if (key === 'qys') { ridge(pal.far, 0.3, 2.2, 34, 0.7, 0.35, pal.farSnow, 1.2, 0.45); ridge(mix(pal.far, pal.mid, 0.5), 0.15, 1.3, 48, 2.3, 0.3, pal.farSnow, 0.8, 0.25); hills(pal.mid, 0, 0.7, 70, 2.2, 10); }
+  else { ridge(pal.far, 0.35, 2.4, 34, 0.7, 0.35, key === 'tun' ? null : '#e8eef4', 2.0, 0.5); ridge(mix(pal.far, pal.mid, 0.45), 0.15, 1.4, 48, 2.3, 0.3, null, 0, 0.25); hills(pal.mid, 0, 0.8, 70, 2.2, 18); hills(pal.mid2, -0.2, 0.45, 90, 4.1, 26); }
+  /* ---------- cloud layer ---------- */
+  const Hc = (STRIP_EL_TOP - CLOUD_BOT) * S, cloud = mkCanvas(W, Hc, 1), c = cloud.getContext('2d'); c.clearRect(0, 0, W, Hc);
+  const cumulus = (cx0, cy0, w, h) => {   // multi-lobed: shaded base lobes, lit top lobes, bright crest
+    const lobes = 5 + Math.floor(r() * 4), L = [];
+    for (let i = 0; i < lobes; i++) { const u = (i + 0.5) / lobes; L.push({ x: cx0 + (u - 0.5) * w, y: cy0 - Math.sin(u * Math.PI) * h * (0.35 + r() * 0.5), rx: w / lobes * (0.7 + r() * 0.6), ry: h * (0.35 + r() * 0.35) }); }
+    for (const l of L) blob(c, l.x + w * 0.02, l.y + l.ry * 0.9, l.rx * 1.15, l.ry * 0.9, pal.cloud.shade, 0.55);
+    blob(c, cx0, cy0 + h * 0.35, w * 0.55, h * 0.3, pal.cloud.shade, 0.5);
+    for (const l of L) blob(c, l.x, l.y, l.rx, l.ry, pal.cloud.lit, 0.5);
+    for (const l of L) blob(c, l.x - l.rx * 0.3 * Math.sign(lx || 1) * -1, l.y - l.ry * 0.35, l.rx * 0.55, l.ry * 0.45, night ? 'rgba(120,140,190,.35)' : 'rgba(255,255,255,.75)', 0.3);
+  };
+  for (let k = 0; k < pal.cloud.n; k++) { const size = k % 3, w = (size === 0 ? 14 : size === 1 ? 9 : 5) * S * (0.8 + r() * 0.5), h = w * (0.22 + r() * 0.12);
+    cumulus(X(-STRIP_AZ + r() * 2 * STRIP_AZ), Y(3.2 + r() * 5.5 - size * 0.4), w, h); }
+  /* ---------- ground layer ---------- */
+  const Hg = (GROUND_TOP - STRIP_EL_BOT) * S, ground = mkCanvas(W, Hg, 1), g = ground.getContext('2d'), Yg = (el) => (GROUND_TOP - el) * S;
+  const gg = g.createLinearGradient(0, Yg(GROUND_TOP), 0, Yg(STRIP_EL_BOT)); gg.addColorStop(0, mix(pal.groundFar, pal.haze, pal.hazeK)); gg.addColorStop(0.06, mix(pal.groundFar, pal.haze, 0.3)); gg.addColorStop(0.2, pal.groundFar); gg.addColorStop(0.55, pal.ground); gg.addColorStop(1, shade(pal.ground, winter ? 0.02 : -0.08));
+  g.fillStyle = gg; g.fillRect(0, 0, W, Hg);
+  g.globalCompositeOperation = winter ? 'soft-light' : 'multiply'; g.globalAlpha = winter ? 0.35 : 0.45; g.fillStyle = noisePattern(g); g.fillRect(0, 0, W, Hg); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  /* large soft tonal patches (dry/wet, drifts in winter) receding in perspective */
+  for (let i = 0; i < 48; i++) { const s = 60 + Math.pow(r(), 1.4) * 900, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, w = mil(12 + r() * 30, s) * S, h = mil(0.9 + r() * 2, s) * S * 0.6;
+    blob(g, X(az), Yg(el), w, Math.max(2, h), winter ? (r() < 0.5 ? 'rgba(255,255,255,.55)' : 'rgba(150,170,205,.28)') : (r() < 0.5 ? rgba('#ffffff', 0.09) : rgba('#000000', 0.12)), 0.3); }
+  if (winter) { g.strokeStyle = 'rgba(120,140,180,.35)'; g.lineWidth = 1; for (let i = 0; i < 90; i++) { const s = 50 + Math.pow(r(), 1.5) * 500, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, len = mil(6 + r() * 12, s) * S; g.beginPath(); g.moveTo(X(az), Yg(el)); g.quadraticCurveTo(X(az) + len * 0.5, Yg(el) - 2, X(az) + len, Yg(el) + 1); g.stroke(); } }
+  /* dirt road: winds from the near right toward the far centre; two tyre tracks inside it */
+  const roadPts = []; for (let s = 45; s <= 1400; s *= 1.06) { const x = 9 + 4 * Math.sin(s / 260) + s * 0.004; roadPts.push({ s, azL: mil(x - 1.7, s), azR: mil(x + 1.7, s), el: ge(s) }); }
+  g.beginPath(); g.moveTo(X(roadPts[0].azL), Yg(roadPts[0].el)); for (const p of roadPts) g.lineTo(X(p.azL), Yg(p.el)); for (let i = roadPts.length - 1; i >= 0; i--) g.lineTo(X(roadPts[i].azR), Yg(roadPts[i].el)); g.closePath();
+  const rg2 = g.createLinearGradient(0, Yg(GROUND_TOP), 0, Yg(STRIP_EL_BOT)); rg2.addColorStop(0, rgba(pal.road, 0)); rg2.addColorStop(0.15, rgba(pal.road, 0.55)); rg2.addColorStop(1, rgba(pal.road, 0.85)); g.fillStyle = rg2; g.fill();
+  g.strokeStyle = winter ? 'rgba(90,100,120,.35)' : 'rgba(40,30,15,.28)'; for (const off of [-0.9, 0.9]) { g.beginPath(); roadPts.forEach((p, i) => { const az = (p.azL + p.azR) / 2 + mil(off, p.s), w = mil(0.35, p.s) * S; g.lineWidth = Math.max(1, w); if (i === 0) g.moveTo(X(az), Yg(p.el)); else g.lineTo(X(az), Yg(p.el)); }); g.stroke(); }
+  /* grass: thousands of short strokes in 3 tones, denser and longer toward the viewer; winter: sparse dry stalks over snow */
+  const tones = pal.grass, nBlades = winter ? 900 : 3600;
+  for (let i = 0; i < nBlades; i++) {
+    const s = 43 + Math.pow(r(), 2.2) * 800, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, len = mil(0.22 + r() * 0.3, s) * S, lean = (r() - 0.5) * 0.9;
+    if (len < 1.2) continue; g.strokeStyle = tones[i % 3]; g.lineWidth = Math.max(0.8, len * 0.09); g.globalAlpha = winter ? 0.5 : 0.75;
+    g.beginPath(); g.moveTo(X(az), Yg(el)); g.quadraticCurveTo(X(az) + lean * len * 0.4, Yg(el) - len * 0.6, X(az) + lean * len, Yg(el) - len); g.stroke();
+  }
+  g.globalAlpha = 1;
+  /* fine far ticks near the horizon for texture */
+  g.strokeStyle = winter ? 'rgba(120,130,150,.25)' : rgba(tones[2], 0.5); g.lineWidth = 1;
+  for (let i = 0; i < 1400; i++) { const s = 300 + r() * 1100, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ; g.beginPath(); g.moveTo(X(az), Yg(el)); g.lineTo(X(az) + (r() - 0.5), Yg(el) - 1 - r() * 1.5); g.stroke(); }
+  /* tussocks: fans of blades with a contact shadow */
+  for (let i = 0; i < (winter ? 24 : 70); i++) { const s = 50 + Math.pow(r(), 1.8) * 500, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, len = mil(0.45 + r() * 0.35, s) * S, x0 = X(az), y0 = Yg(el);
+    if (len < 3) continue; blob(g, x0 + lx * len * 0.5, y0 + 1, len * 0.9, len * 0.18, shCol, 0.3);
+    for (let j = 0; j < 9; j++) { const a = -1.35 + j * 0.34 + (r() - 0.5) * 0.2, L = len * (0.7 + r() * 0.4); g.strokeStyle = tones[(j + i) % 3]; g.lineWidth = Math.max(1, len * 0.07); g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + Math.sin(a) * L * 0.5, y0 - L * 0.55, x0 + Math.sin(a) * L, y0 - Math.cos(a) * L); g.stroke(); } }
+  /* stones: lit side, shaded side, contact shadow */
+  for (let i = 0; i < 90; i++) { const s = 46 + Math.pow(r(), 1.6) * 700, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, w = mil(0.25 + r() * 0.5, s) * S, h = w * (0.45 + r() * 0.3), x0 = X(az), y0 = Yg(el);
+    if (w < 1.5) continue; blob(g, x0 + lx * w * 0.6, y0 + h * 0.15, w * 1.1, h * 0.45, shCol, 0.35);
+    g.fillStyle = pal.stone; g.beginPath(); g.ellipse(x0, y0 - h * 0.35, w, h, 0, 0, 6.2832); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.ellipse(x0 - lx * w * 0.3, y0 - h * 0.6, w * 0.5, h * 0.45, 0, 0, 6.2832); g.fill();
+    g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(x0 + lx * w * 0.35, y0 - h * 0.2, w * 0.55, h * 0.4, 0, 0, 6.2832); g.fill(); }
+  /* shrubs: clustered dark lobes with a lit crown (winter: bare twigs) */
+  for (let i = 0; i < 26; i++) { const s = 80 + Math.pow(r(), 1.5) * 800, el = ge(s), az = -STRIP_AZ + r() * 2 * STRIP_AZ, h = mil(0.8 + r() * 0.9, s) * S, x0 = X(az), y0 = Yg(el);
+    if (h < 2.5) continue; blob(g, x0 + lx * h * 0.7, y0, h * 1.2, h * 0.22, shCol, 0.3);
+    if (winter) { g.strokeStyle = pal.shrub; g.lineWidth = Math.max(1, h * 0.05); for (let k = 0; k < 7; k++) { const a = -0.9 + k * 0.3 + (r() - 0.5) * 0.2, L = h * (0.7 + r() * 0.3); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + Math.sin(a) * L, y0 - Math.cos(a) * L); g.lineTo(x0 + Math.sin(a) * L + Math.sin(a + 0.5) * L * 0.3, y0 - Math.cos(a) * L - Math.cos(a + 0.5) * L * 0.3); g.stroke(); } }
+    else { for (let k = 0; k < 6; k++) { const ox = (r() - 0.5) * h * 1.2, oy = -h * 0.45 - r() * h * 0.35, rr = h * (0.3 + r() * 0.25); g.fillStyle = pal.shrub; g.beginPath(); g.ellipse(x0 + ox, y0 + oy, rr, rr * 0.8, 0, 0, 6.2832); g.fill(); }
+      g.fillStyle = rgba(pal.treeLit, 0.55); g.beginPath(); g.ellipse(x0 - lx * h * 0.35, y0 - h * 0.7, h * 0.45, h * 0.3, 0, 0, 6.2832); g.fill(); } }
+  /* fence lines: posts + two wires, receding with correct perspective (right at x=+14 m, left at x=-22 m) */
+  const fence = (xm) => { let lastPx = -1e9; const wireA = [], wireB = [];
+    for (let s = 60; s <= 1100; s += 4.5) { const az = mil(xm, s); if (Math.abs(az) > STRIP_AZ + 2) continue; const bot = ge(s), top = bot + mil(1.25, s), px = X(az), pw = Math.max(1, mil(0.12, s) * S);
+      wireA.push([px, Yg(bot + mil(1.1, s))]); wireB.push([px, Yg(bot + mil(0.6, s))]);
+      if (Math.abs(px - lastPx) < 2.2) continue; lastPx = px;
+      blob(g, px + lx * mil(1.2, s) * S * 0.5, Yg(bot) + 0.5, mil(1.3, s) * S * 0.6, Math.max(1, mil(0.12, s) * S), shCol, 0.3);
+      g.fillStyle = winter ? '#5a5048' : '#5a4632'; g.fillRect(px - pw / 2, Yg(top), pw, Yg(bot) - Yg(top)); g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(px - pw / 2, Yg(top), Math.max(0.5, pw * 0.35), Yg(bot) - Yg(top));
+      if (winter && pw > 1.5) { g.fillStyle = '#f4f7fa'; g.fillRect(px - pw / 2, Yg(top) - 1, pw, Math.max(1, pw * 0.4)); } }
+    g.strokeStyle = winter ? 'rgba(70,70,80,.6)' : 'rgba(50,40,30,.6)'; g.lineWidth = 1; for (const wr of [wireA, wireB]) { if (wr.length < 2) continue; g.beginPath(); g.moveTo(wr[0][0], wr[0][1]); for (let i = 1; i < wr.length; i++) g.lineTo(wr[i][0], wr[i][1] + (i % 2 ? 0.6 : 0)); g.stroke(); } };
+  fence(14); fence(-22);
+  /* set dressing per palette */
+  const yurt = (s, az) => { const w = mil(8.6, s) * S, h = mil(4.3, s) * S, x0 = X(az), y0 = Yg(ge(s)); blob(g, x0 + lx * w * 0.5, y0 + 1, w * 0.75, Math.max(1.5, h * 0.18), shCol, 0.3);
+    const yg = g.createLinearGradient(x0 - w / 2, 0, x0 + w / 2, 0); yg.addColorStop(0, lx < 0 ? '#e9e3d6' : '#c9c2b4'); yg.addColorStop(0.5, '#f4f1ea'); yg.addColorStop(1, lx < 0 ? '#c9c2b4' : '#e9e3d6');
+    g.fillStyle = yg; g.beginPath(); g.ellipse(x0, y0, w / 2, h, 0, Math.PI, 0); g.fill(); g.fillStyle = 'rgba(120,90,50,.55)'; g.fillRect(x0 - w / 2, y0 - h * 0.45, w, Math.max(1, h * 0.06)); g.fillStyle = '#5a4a3a'; g.fillRect(x0 - w * 0.06, y0 - h * 0.4, w * 0.12, h * 0.4); };
+  const tree = (s, az, hM) => { const h = mil(hM, s) * S, x0 = X(az), y0 = Yg(ge(s)), tw = Math.max(1, h * 0.06); blob(g, x0 + lx * h * 0.9, y0, h * 0.9, h * 0.14, shCol, 0.3);
+    g.fillStyle = '#4b3a2a'; g.fillRect(x0 - tw / 2, y0 - h * 0.55, tw, h * 0.55);
+    for (let i = 0; i < 7; i++) { const ox = (r() - 0.5) * h * 0.7, oy = -h * 0.65 - r() * h * 0.3, rr = h * (0.2 + r() * 0.16); g.fillStyle = pal.tree; g.beginPath(); g.ellipse(x0 + ox, y0 + oy, rr, rr * 0.85, 0, 0, 6.2832); g.fill(); g.fillStyle = rgba(pal.treeLit, 0.5); g.beginPath(); g.ellipse(x0 + ox - lx * rr * 0.4, y0 + oy - rr * 0.35, rr * 0.55, rr * 0.4, 0, 0, 6.2832); g.fill(); } };
+  const pole = (s, az) => { const h = mil(7, s) * S, x0 = X(az), y0 = Yg(ge(s)), pw = Math.max(1.2, mil(0.25, s) * S); g.fillStyle = '#1e1a22'; g.fillRect(x0 - pw / 2, y0 - h, pw, h); g.fillRect(x0 - mil(1.2, s) * S, y0 - h * 0.92, mil(2.4, s) * S, Math.max(1, h * 0.03)); return { x: x0, y: y0 - h * 0.92 }; };
+  if (key === 'dala') { yurt(760, 24); yurt(820, 29); tree(420, -44, 8); tree(470, -49, 6); tree(950, 12, 7); }
+  if (key === 'tun') { yurt(760, -24); tree(420, 40, 8); tree(470, 45, 6); }
+  if (key === 'ymyrt') { let prev = null; for (let i = 0; i < 7; i++) { const s = 380 + i * 105, p = pole(s, -36 + i * 11); if (prev) { g.strokeStyle = 'rgba(30,26,34,.75)'; g.lineWidth = 1; g.beginPath(); g.moveTo(prev.x, prev.y); g.quadraticCurveTo((prev.x + p.x) / 2, (prev.y + p.y) / 2 + 6, p.x, p.y); g.stroke(); } prev = p; } tree(300, 30, 6); }
+  if (key === 'qys') { for (let i = 0; i < 9; i++) tree(200 + Math.pow(r(), 1.3) * 700, -STRIP_AZ + r() * 2 * STRIP_AZ, 5 + r() * 3); }
+  if (key === 'tau') { for (let i = 0; i < 10; i++) { const s = 250 + r() * 800, az = -STRIP_AZ + r() * 2 * STRIP_AZ, h = mil(6 + r() * 5, s) * S, x0 = X(az), y0 = Yg(ge(s)); blob(g, x0 + lx * h * 0.6, y0, h * 0.7, h * 0.12, shCol, 0.3);
+      g.fillStyle = pal.tree; g.beginPath(); g.moveTo(x0, y0 - h); g.lineTo(x0 + h * 0.28, y0); g.lineTo(x0 - h * 0.28, y0); g.closePath(); g.fill(); g.fillStyle = rgba(pal.treeLit, 0.5); g.beginPath(); g.moveTo(x0, y0 - h); g.lineTo(x0 - lx * h * 0.28, y0); g.lineTo(x0, y0); g.closePath(); g.fill(); }
+    g.fillStyle = 'rgba(122,116,102,.9)'; for (let i = 0; i < 80; i++) { const s = 60 + r() * 900, az = -STRIP_AZ + r() * 2 * STRIP_AZ, w = mil(0.2 + r() * 0.5, s) * S; if (w < 1) continue; g.beginPath(); g.ellipse(X(az), Yg(ge(s)), w, w * 0.5, r(), 0, 6.2832); g.fill(); } }
+  /* night: everything below the horizon sinks into blue-black */
+  if (night) { g.fillStyle = 'rgba(4,8,24,.45)'; g.fillRect(0, 0, W, Hg); }
+  /* low-res copies for the depth-of-field lobby backdrop and the dark view outside the scope */
+  const lo = mkCanvas(W / 16, (Hf + Hg) / 16, 1), lg = lo.getContext('2d'); lg.drawImage(far, 0, 0, W / 16, Hf / 16); lg.drawImage(ground, 0, (Hf - (GROUND_TOP - FAR_BOT) * S) / 16, W / 16, Hg / 16);
+  return { far, cloud, ground, lo, Hf, Hc, Hg };
+}
 function ensureBackground(L) {
   const key = paletteFor(L);
-  if (!strips[key]) strips[key] = bakeStrip(key);
-  bgCache.canvas = strips[key]; const pal = PALETTES[key]; const grad = ctx.createLinearGradient(0, -40, 0, 0);
-  if (pal.band) { grad.addColorStop(0, pal.skyTop); grad.addColorStop(0.85, pal.skyHor); grad.addColorStop(1, pal.band); }
-  else { grad.addColorStop(0, pal.skyTop); grad.addColorStop(1, pal.skyHor); }
+  if (!strips[key]) { strips[key] = bakeStrip(key); stripOrder.push(key); while (stripOrder.length > 3) delete strips[stripOrder.shift()]; }   // keep three palettes at most (memory)
+  else if (stripOrder.indexOf(key) >= 0) { stripOrder.splice(stripOrder.indexOf(key), 1); stripOrder.push(key); }
+  bgCache.canvas = strips[key]; const pal = PALETTES[key]; const grad = ctx.createLinearGradient(0, -44, 0, 0);
+  grad.addColorStop(0, pal.skyTop); grad.addColorStop(0.55, pal.skyMid); grad.addColorStop(pal.band ? 0.86 : 1, pal.skyHor); if (pal.band) grad.addColorStop(1, pal.band);
   bgCache.grad = grad; bgCache.pal = pal;
 }
-function bakeStrip(key) {
-  const pal = PALETTES[key], W = 2 * STRIP_AZ * STRIP_PPM, Hh = (STRIP_EL_TOP - STRIP_EL_BOT) * STRIP_PPM;
-  const c = mkCanvas(W, Hh, 1), g = c.getContext('2d');
-  const X = (az) => (az + STRIP_AZ) * STRIP_PPM, Y = (el) => (STRIP_EL_TOP - el) * STRIP_PPM, r = mulberry32(77 + PALETTE_ORDER.indexOf(key) * 101);
-  const groundAt = (s) => -1500 / s;
-  /* far hills / peaks along the horizon */
-  const hills = (col, base, amp, n, seedShift, top) => { g.fillStyle = col; g.beginPath(); g.moveTo(0, Y(base)); let el = base;
-    for (let i = 0; i <= n; i++) {
-      const az = -STRIP_AZ + 2 * STRIP_AZ * i / n;
-      el = base + amp * (0.5 + 0.5 * Math.sin(i * 1.7 + seedShift) * r() + 0.3 * Math.sin(i * 0.6 + seedShift * 2));
-      if (top) el = Math.max(el, base);
-      g.lineTo(X(az), Y(el));
-    }
-    g.lineTo(W, Y(base)); g.lineTo(W, Y(base - 1)); g.lineTo(0, Y(base - 1)); g.closePath(); g.fill(); };
-  if (key === 'tau') { hills(pal.farShadow, 0.2, 9, 28, 0.4, true); hills(pal.far, 0.1, 7, 34, 1.9, true); hills('#c8d5e0', 0, 5, 40, 3.1, true); hills(pal.mid, 0, 1.6, 60, 5.2, true); }
-  else if (key === 'ymyrt') { hills(pal.far, 0, 2.2, 40, 0.7, true); hills(pal.mid, 0, 1.0, 60, 2.2, true); }
-  else { hills(pal.far, 0, 1.6, 40, 0.7, true); hills(pal.mid, 0, 0.7, 60, 2.2, true); }
-  /* sky dressing (strip sky region el 0..12) */
-  if (key === 'dala') {
-    g.fillStyle = 'rgba(255,243,196,.35)'; g.beginPath(); g.arc(X(-30), Y(9), 4.5 * STRIP_PPM, 0, 6.2832); g.fill(); g.fillStyle = '#fff3c4'; g.beginPath();
-    g.arc(X(-30), Y(9), 2.5 * STRIP_PPM, 0, 6.2832); g.fill();
-    for (let k = 0; k < 3; k++) {
-      const cx0 = X(-45 + 45 * k + r() * 10), cy0 = Y(6 + r() * 4);
-      for (let i = 0; i < 6; i++) { g.fillStyle = i < 4 ? 'rgba(255,255,255,.95)' : 'rgba(215,222,232,.9)'; g.beginPath(); g.ellipse(cx0 + (i - 2.5) * 2.2 * STRIP_PPM, cy0 + (i >= 4 ? 1.2 * STRIP_PPM : 0), (1.6 + r()) * STRIP_PPM, (1 + r() * 0.6) * STRIP_PPM, 0, 0, 6.2832); g.fill(); }
-    } }
-  if (key === 'ymyrt') { g.fillStyle = '#ffd08a'; g.beginPath(); g.arc(X(18), Y(0), 3.2 * STRIP_PPM, Math.PI, 0); g.fill();
-    for (let k = 0; k < 5; k++) { g.fillStyle = 'rgba(120,80,110,.55)'; g.beginPath(); g.ellipse(X(-50 + 25 * k + r() * 10), Y(3 + r() * 6), (6 + r() * 6) * STRIP_PPM, 0.35 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
-  if (key === 'tau') { g.fillStyle = '#26262c'; g.beginPath(); g.moveTo(X(30), Y(10)); g.lineTo(X(30.6), Y(10.3)); g.lineTo(X(31.2), Y(10)); g.lineTo(X(30.6), Y(9.85)); g.closePath(); g.fill();
-    for (let k = 0; k < 3; k++) { g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.ellipse(X(-40 + 40 * k), Y(8 + r() * 2), 5 * STRIP_PPM, 0.6 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
-  if (key === 'tun') {   /* moon, stars, thin cloud */
-    g.fillStyle = '#f4f0dc'; g.beginPath(); g.arc(X(26), Y(9), 2.2 * STRIP_PPM, 0, 6.2832); g.fill(); g.fillStyle = pal.skyTop; g.beginPath(); g.arc(X(26.9), Y(9.4), 1.9 * STRIP_PPM, 0, 6.2832); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < 90; i++) { const s = 0.5 + r() * 1.2; g.fillRect(X(-70 + r() * 140), Y(2 + r() * 10), s, s); }
-    for (let k = 0; k < 3; k++) { g.fillStyle = 'rgba(60,72,100,.55)'; g.beginPath(); g.ellipse(X(-50 + 35 * k + r() * 10), Y(3 + r() * 4), (6 + r() * 6) * STRIP_PPM, 0.35 * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
-  /* ground bands (aerial perspective) */
-  const bands = [0, -0.8, -1.8, -3.2, -5.5, -10, -35];
-  for (let i = 0; i < 6; i++) { g.fillStyle = mix(pal.ground, pal.haze, pal.hazeK[i]); g.fillRect(0, Y(bands[i]), W, Y(bands[i + 1]) - Y(bands[i])); }
-  /* stripes / drifts / scree and grass ticks */
-  for (let i = 0; i < 26; i++) {
-    const el = -1.2 - Math.pow(r(), 1.6) * 33, h = 0.08 + Math.abs(el) * 0.03;
-    g.fillStyle = key === 'qys' ? 'rgba(205,214,224,.7)' : mix(pal.stripe, pal.haze, clamp(1 - Math.abs(el) / 12, 0, 0.6));
-    g.globalAlpha = 0.55;
-    if (key === 'qys') { g.beginPath(); g.ellipse(X(-70 + r() * 140), Y(el), (4 + r() * 12) * STRIP_PPM, h * STRIP_PPM * 3, 0, 0, 6.2832); g.fill(); }
-    else g.fillRect(X(-70 + r() * 60), Y(el), (30 + r() * 80) * STRIP_PPM, h * STRIP_PPM);
-    g.globalAlpha = 1;
-  }
-  g.strokeStyle = key === 'qys' ? '#6b6f78' : key === 'tau' ? '#6e6a5a' : key === 'ymyrt' ? '#4a3c30' : key === 'tun' ? '#1f2430' : '#7f8a44'; g.lineWidth = 1.2;
-  for (let i = 0; i < 300; i++) {
-    const el = -1.5 - Math.pow(r(), 1.5) * 33, az = -70 + r() * 140, len = (0.15 + Math.abs(el) * 0.05) * STRIP_PPM;
-    g.beginPath(); g.moveTo(X(az), Y(el)); g.lineTo(X(az) + (r() - 0.5) * len * 0.6, Y(el) - len); g.stroke();
-  }
-  /* set dressing */
-  if (key === 'dala') {
-    const ye = groundAt(700), yw = 8.6, yh = 4.3; g.fillStyle = '#f4f1ea'; g.beginPath();
-    g.ellipse(X(22), Y(ye), yw / 2 * STRIP_PPM, yh * STRIP_PPM, 0, Math.PI, 0); g.fill();   // киіз үй
-    g.fillStyle = '#5a4a3a'; g.fillRect(X(22) - 0.5 * STRIP_PPM, Y(ye) - 1.6 * STRIP_PPM, 1 * STRIP_PPM, 1.6 * STRIP_PPM);
-    const te = groundAt(400); g.fillStyle = '#4b3a2a'; g.fillRect(X(-45) - 0.4 * STRIP_PPM, Y(te) - 7 * STRIP_PPM, 0.8 * STRIP_PPM, 7 * STRIP_PPM);   // lone tree
-    g.fillStyle = '#4f7a3c';
-    for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(X(-45) + (r() - 0.5) * 6 * STRIP_PPM, Y(te) - (7 + r() * 5) * STRIP_PPM, (2.5 + r() * 2) * STRIP_PPM, (2 + r()) * STRIP_PPM, 0, 0, 6.2832); g.fill(); } }
-  if (key === 'qys') {
-    g.strokeStyle = '#3d3a36'; g.lineWidth = 2;
-    for (let i = 0; i < 40; i++) { const el = -2 - r() * 20, az = -70 + r() * 140, l = (0.3 + Math.abs(el) * 0.08) * STRIP_PPM; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(X(az), Y(el)); g.lineTo(X(az) + (k - 1) * l * 0.5, Y(el) - l); g.stroke(); } }
-    const fe = groundAt(250); g.strokeStyle = '#4a4540'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(-70), Y(fe) - 0.9 * STRIP_PPM); g.lineTo(X(70), Y(fe) - 0.9 * STRIP_PPM); g.stroke();
-    for (let az = -70; az <= 70; az += 2.5) { g.beginPath(); g.moveTo(X(az), Y(fe)); g.lineTo(X(az), Y(fe) - 1.4 * STRIP_PPM); g.stroke(); }
-    g.strokeStyle = 'rgba(160,170,185,.9)'; g.lineWidth = 3; for (const off of [-1, 1]) { g.beginPath(); g.moveTo(X(10 + off * 6), Y(-35)); g.lineTo(X(10 + off * 0.3), Y(-1)); g.stroke(); } }
-  if (key === 'ymyrt') {   /* distant power poles with sagging wires */
-    g.fillStyle = '#1e1a22';
-    for (let i = 0; i < 6; i++) {
-      const s = 450 + i * 110, el = groundAt(s), az = -34 + i * 11, H2 = 6 * 1000 / s, wpx = Math.max(1.5, 0.25 * 1000 / s * STRIP_PPM);
-      g.fillRect(X(az) - wpx / 2, Y(el) - H2 * STRIP_PPM, wpx, H2 * STRIP_PPM);
-      g.fillRect(X(az) - 1.2 * 1000 / s * STRIP_PPM, Y(el) - H2 * 0.9 * STRIP_PPM, 2.4 * 1000 / s * STRIP_PPM, 0.12 * STRIP_PPM);
-      if (i > 0) {
-        const s0 = s - 110; g.strokeStyle = 'rgba(30,26,34,.7)'; g.lineWidth = 1; g.beginPath(); g.moveTo(X(az - 11), Y(groundAt(s0)) - 6 * 1000 / s0 * 0.9 * STRIP_PPM);
-        g.quadraticCurveTo(X(az - 5.5), Y(el) - H2 * 0.7 * STRIP_PPM, X(az), Y(el) - H2 * 0.9 * STRIP_PPM); g.stroke();
-      }
-    }
-  }
-  if (key === 'tau') {
-    g.fillStyle = 'rgba(122,116,102,.9)';
-    for (let i = 0; i < 60; i++) { const el = -2 - r() * 30, az = -70 + r() * 140; g.beginPath(); g.ellipse(X(az), Y(el), (0.3 + r() * 0.8) * STRIP_PPM, (0.15 + r() * 0.3) * STRIP_PPM, r(), 0, 6.2832); g.fill(); }
-  }
-  return c;
-}
 
-/* -- snow (winter palettes) */
-const snow = []; let snowN = 0;
-function initSnow() { snow.length = 0; const r = mulberry32(99); snowN = reducedMotion ? 12 : 40; for (let i = 0; i < 40; i++) snow.push({ x: r() * layout.w, y: r() * layout.h, s: 0.6 + r() * 0.8 }); }
-
+/* -- snow (winter palettes) and dust motes / pollen (day palettes): per-viewer particles in screen space */
+const snow = []; let snowN = 0; const motes = [];
+function initSnow() { snow.length = 0; motes.length = 0; const r = mulberry32(99); snowN = reducedMotion ? 16 : 56; for (let i = 0; i < 56; i++) snow.push({ x: r() * layout.w, y: r() * layout.h, s: 0.5 + r() * 1.0, ph: r() * 6.28 });
+  for (let i = 0; i < 14; i++) motes.push({ a: r() * 6.28, d: Math.sqrt(r()), s: 0.4 + r() * 0.6, ph: r() * 6.28 }); }
+/* near-foreground grass blades at the bottom of the scope (out of focus, bend with the wind) */
+const BLADES = []; { const r = mulberry32(55); for (let i = 0; i < 11; i++) BLADES.push({ x: -0.95 + i * 0.19 + (r() - 0.5) * 0.1, h: 0.16 + r() * 0.16, w: 3 + r() * 4, ph: r() * 6.28, lean: (r() - 0.5) * 0.4 }); }
 /* -- world → screen helpers (no allocation) */
 const V = { az: 0, el: 0, pp: 13, shx: 0, shy: 0 };
 const sx = (az) => layout.cx + (az - V.az) * V.pp + V.shx;
 const sy = (el) => layout.cy - (el - V.el) * V.pp + V.shy;
 
 /* -- the frame */
+let blurC = null, blurG = null;   // 1/10-scale copy of the scene: the dark, soft view outside the scope tube
 function drawFrame(dtWall) {
   if (screen !== 'play') return;
-  const { w, h, cx, cy, R, dpr } = layout, L = level, pal = bgCache.pal;
-  if (!pal || !atlas) return;
+  const { w, h, cx, cy, R, dpr } = layout, L = level, pal = bgCache.pal, st = bgCache.canvas;
+  if (!pal || !atlas || !st) return;
   const t = simTime;
   /* zoom ease (draw scale only) */
   let pp = ppm; if (zoomAnim.t0 >= 0) { const u = clamp((wallNow - zoomAnim.t0) / 120, 0, 1); pp = lerp(zoomAnim.from, zoomAnim.to, outCubic(u)); if (u >= 1) zoomAnim.t0 = -1; }
@@ -2073,17 +2146,26 @@ function drawFrame(dtWall) {
   const hu = clamp((wallNow - hipT0) / HIP_MS, 0, 1), hk = reducedMotion ? (hip ? 1 : 0) : (hip ? hu : 1 - hu), hipPpm = w / HIP_FOV;
   if (hk > 0) pp = lerp(pp, hipPpm, smooth(hk));
   const rτ = t - recoil.t0, rk = (rτ < 0.5 && rτ >= 0 ? Math.exp(-rτ / 0.12) : 0) * RIFLE.recoil;
-  V.az = cam.on ? cam.cAz : aim.az + swayAz(t) + recoil.az * rk; V.el = cam.on ? cam.cEl : aim.el + dial * (1 - hk) + swayEl(t) + 1.8 * rk; V.pp = pp;   // the scene is centred on the bore (aim + dial)
+  const swA = swayAz(t), swE = swayEl(t);
+  V.az = cam.on ? cam.cAz : aim.az + swA + recoil.az * rk; V.el = cam.on ? cam.cEl : aim.el + dial * (1 - hk) + swE + 1.8 * rk; V.pp = pp;   // the scene is centred on the bore (aim + dial)
   const sτ = t - shake.t0; let sh = 0; if (sτ >= 0 && sτ < 0.2) sh = shake.A * Math.exp(-sτ / 0.06) * Math.sin(6.2832 * 30 * sτ) * (reducedMotion ? 0.4 : 1);
   V.shx = sh * shake.dx; V.shy = sh * shake.dy;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   /* 1. sky gradient in mil space + ground base (below el −35) */
   const hy = cy + V.el * pp + V.shy; ctx.setTransform(dpr, 0, 0, dpr * pp, 0, hy * dpr); ctx.fillStyle = bgCache.grad; ctx.fillRect(0, -200, w, 200);
   ctx.fillStyle = pal.base; ctx.fillRect(0, 0, w, 200); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  /* 2. strip */
-  const k = pp / STRIP_PPM;
-  ctx.drawImage(bgCache.canvas, sx(-STRIP_AZ), sy(STRIP_EL_TOP), 2 * STRIP_AZ * STRIP_PPM * k, (STRIP_EL_TOP - STRIP_EL_BOT) * STRIP_PPM * k);
-  /* 3–4. targets (posts/rails first, then sprites) */
+  /* 2. far layer (slight parallax), drifting clouds (wrapping), ground */
+  const k = pp / STRIP_PPM, Wpx = 2 * STRIP_AZ * STRIP_PPM * k, farX = sx(-STRIP_AZ) + V.az * PARALLAX * pp;
+  ctx.drawImage(st.far, farX, sy(STRIP_EL_TOP), Wpx, st.Hf * k);
+  const drift = ((0.05 + 0.02 * Math.abs(wind)) * (wind < 0 ? -1 : 1) * t) % (2 * STRIP_AZ), dx0 = drift * pp;   // mil/s → px, wraps every 140 mil
+  ctx.drawImage(st.cloud, farX + dx0, sy(STRIP_EL_TOP), Wpx, st.Hc * k); ctx.drawImage(st.cloud, farX + dx0 + (drift > 0 ? -Wpx : Wpx), sy(STRIP_EL_TOP), Wpx, st.Hc * k);
+  const gx = sx(-STRIP_AZ), gy = sy(GROUND_TOP); ctx.drawImage(st.ground, gx, gy, Wpx, st.Hg * k);
+  /* 2b. heat shimmer: 12 thin bands of the distant ground re-drawn with a sine wobble (day palettes, scope only) */
+  if (pal.shimmer && hk < 1 && !reducedMotion) { const bh = 0.28 * STRIP_PPM; for (let i = 0; i < 12; i++) { const syy = (GROUND_TOP + 0.15 + i * 0.28) * STRIP_PPM, off = 1.6 * (1 - hk) * Math.sin(t * 2.1 + i * 0.85) * Math.sqrt(k);
+    ctx.drawImage(st.ground, 0, syy, st.ground.width, bh, gx + off, gy + syy * k, Wpx, bh * k); } }
+  /* 2c. cloud shadows drifting over the ground */
+  if (!pal.night) { ctx.globalAlpha = 0.11; for (let i = 0; i < 2; i++) { const az = ((drift * 1.6 + i * 70 + 35) % 140) - 70, el = -3.5 - i * 4, ww = (26 + i * 10) * pp, hh = (2.4 + i * 1.5) * pp; sprite(ctx, 'shadow', sx(az) - ww / 2, sy(el) - hh / 2, ww, hh); } ctx.globalAlpha = 1; }
+  /* 3–4. targets: shadows and supports first, then bodies */
   for (let i = 0; i < targets.length; i++) drawTargetSupport(targets[i], t);
   for (let i = 0; i < targets.length; i++) drawTarget(targets[i], t);
   /* 5. wind flag */
@@ -2092,26 +2174,27 @@ function drawFrame(dtWall) {
   drawTracer(t);
   /* 7. particles */
   drawParticles();
-  /* 8. snow */
-  if (pal.snow) drawSnow(dtWall);
+  /* 8. snow / motes */
+  if (pal.snow) drawSnow(dtWall); else if (hk < 1 && !reducedMotion) drawMotes(t, hk);
   /* 8b. rangefinder labels (gear_lrf) and hip-view markers / bird paths / wind arrow */
   lrfLabels = 0; if (GEAR.lrf || hk > 0.5) drawTargetLabels(t, hk);
   if (hk > 0.5) drawHipExtras(t, hk);
   /* 9. popups, correction arrow, banners, rim arrows */
   drawPopups(t); drawArrow(t); if (hk < 0.5) drawRimArrows(t); drawBanner(t);
-  /* 10. flashes & scope blackout */
+  /* 10. muzzle flash, flashes & scope blackout */
+  drawMuzzle(t, rτ, hk);
   const fτ = t - flash.t0;
-  if (fτ >= 0 && fτ < 0.12) {   /* globalAlpha instead of rgba strings */
+  if (fτ >= 0 && fτ < 0.12) {
     if (fτ < 0.03) { ctx.fillStyle = 'rgba(242,181,68,.22)'; ctx.fillRect(0, 0, w, h); }
     ctx.globalAlpha = 1 - fτ / 0.12; ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx(flash.az), sy(flash.el), 10 + 50 * (fτ / 0.12), 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  if (rτ >= 0 && rτ < 0.08) {
-    if (rτ < 0.02) { ctx.fillStyle = 'rgba(255,240,220,.18)'; ctx.fillRect(0, 0, w, h); }
-    ctx.globalAlpha = rτ < 0.04 ? 0.9 : 0.9 * (1 - (rτ - 0.04) / 0.04); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, 0, w, h);
+  if (rτ >= 0 && rτ < 0.08) {   // recoil blackout (60 ms)
+    ctx.globalAlpha = rτ < 0.03 ? 0.92 : 0.92 * (1 - (rτ - 0.03) / 0.05); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
   }
   if (cam.on) { ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(0, 0, w, h); }
-  /* 11. reticle + lit dot (the turret dial slides the reticle down inside the tube: crosshair on the target ⇒ bore dial mils above it) */
+  /* 11. the world outside the tube: a 1/10-scale copy of the scene, drawn back soft and dark (12 % after the vignette) */
+  if (hk < 1 && blurC) { blurG.drawImage(canvas, 0, 0, blurC.width, blurC.height); ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.arc(cx, cy, R + 1, 0, 6.2832, true); ctx.clip(); ctx.drawImage(blurC, 0, 0, w, h); ctx.restore(); }
+  /* 12. reticle + lit dot (the turret dial slides the reticle down inside the tube: crosshair on the target ⇒ bore dial mils above it) */
   if (!cam.on && hk < 1) { const kz = pp / ppm, dy = dial * pp, rcy = cy + dy; ctx.globalAlpha = 1 - hk;
     ctx.drawImage(reticles[zoom], cx - R * kz, rcy - R * kz, 2 * R * kz, 2 * R * kz);   // during the 120 ms ease the mil-dots stay glued to the scene
     if (dy > 0) { ctx.strokeStyle = RET_LINE[COS.reticle]; ctx.lineWidth = COS.reticle === 0 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, rcy - R + 1); ctx.stroke(); }   // extend the top arm to the rim
@@ -2123,9 +2206,56 @@ function drawFrame(dtWall) {
       ctx.fillStyle = breath.phase === 'strain' ? '#ff3b30' : (COS.reticle === 2 ? '#3cff7a' : '#ff3b30');
       ctx.beginPath(); ctx.arc(cx, rcy, pr, 0, 6.2832); ctx.fill();
     } ctx.globalAlpha = 1; } else windTick.on = false;
-  /* 12. vignette (fades out into the hip view) */
-  if (hk < 1) { ctx.globalAlpha = 1 - hk; ctx.drawImage(vignette, 0, 0, w, h); ctx.globalAlpha = 1; }
+  /* 13. glass: foreground blades, lens flare ghosts, moving reflections, eyebox shadow, vignette (all fade out into the hip view) */
+  if (hk < 1) {
+    ctx.globalAlpha = 1 - hk; drawBlades(t, hk); drawFlare(pal); drawLens(t, swA, swE);
+    ctx.globalAlpha = 1 - hk; ctx.drawImage(vignette, 0, 0, w, h);
+    const swSpeed = Math.abs(swayAz(t) - swayAz(t - 0.06)) + Math.abs(swayEl(t) - swayEl(t - 0.06));   // breathing blurs the edge: a second, darker rim
+    if (swSpeed > 0.004) { ctx.globalAlpha = Math.min(0.55, swSpeed * 9) * (1 - hk); ctx.drawImage(vignette, 0, 0, w, h); }
+    ctx.globalAlpha = 1;
+  }
   uiFrame();
+}
+/* muzzle flash (ART-SPEC §3): white-hot core, orange petals, a smoke puff — at the bottom of the tube (the barrel is under the view), full size in the hip view */
+function drawMuzzle(t, rτ, hk) {
+  if (!(rτ >= 0 && rτ < 0.06)) return;
+  const { cx, cy, R, h } = layout, u = rτ / 0.06, X = cx + (hk > 0.5 ? 0 : 0), Y = lerp(cy + R * 0.92, h + 6, hk), s = (1 - u * 0.5) * R * (0.42 + 0.5 * hk) * RIFLE.recoil;
+  ctx.globalAlpha = (1 - u) * 0.95;
+  for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * 0.55 + recoil.az * 0.6, L = s * (0.9 + 0.35 * ((i * 7) % 3)); ctx.save(); ctx.translate(X, Y); ctx.rotate(a); sprite(ctx, 'petal', 0, -L * 0.22, L, L * 0.44); ctx.restore(); }
+  sprite(ctx, 'flare', X - s * 0.55, Y - s * 0.55, s * 1.1, s * 1.1);
+  ctx.globalAlpha = (1 - u); sprite(ctx, 'flare', X - s * 0.25, Y - s * 0.25, s * 0.5, s * 0.5); ctx.globalAlpha = 1;
+}
+/* dust motes / pollen inside the tube (day palettes) */
+function drawMotes(t, hk) {
+  const { cx, cy, R } = layout; ctx.fillStyle = bgCache.pal.night ? 'rgba(200,215,255,.35)' : 'rgba(255,248,220,.4)';
+  for (let i = 0; i < motes.length; i++) { const m = motes[i], a = m.a + t * 0.05 * m.s, d = (m.d + 0.02 * Math.sin(t * 0.7 + m.ph)) * R * 0.92, X = cx + Math.cos(a) * d - V.az * 0.4, Y = cy + Math.sin(a) * d + Math.sin(t * 1.3 + m.ph) * 4 + V.el * 0.4;
+    if (Math.hypot(X - cx, Y - cy) > R - 4) continue; const sz = 1 + m.s; ctx.fillRect(X, Y, sz, sz); }
+}
+/* out-of-focus grass at the bottom of the objective: dark, wide, translucent strokes bending with the wind */
+function drawBlades(t, hk) {
+  const { cx, cy, R } = layout, night = bgCache.pal.night, winter = bgCache.pal.snow, bend = wind * 0.9;
+  ctx.lineCap = 'round'; ctx.strokeStyle = winter ? 'rgba(110,120,140,.5)' : night ? 'rgba(6,10,20,.75)' : 'rgba(28,46,18,.62)';
+  for (let i = 0; i < BLADES.length; i++) { const b = BLADES[i], bx = cx + b.x * R * 0.98 - V.az * 0.6, by = cy + R + 4, hh = b.h * R, sway2 = Math.sin(t * 1.7 + b.ph) * (2 + Math.abs(wind)) + bend * 5 + b.lean * hh;
+    ctx.lineWidth = b.w * R / 170 * 1.6; ctx.globalAlpha = (1 - hk) * 0.9; ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + sway2 * 0.3, by - hh * 0.6, bx + sway2, by - hh); ctx.stroke(); }
+  ctx.globalAlpha = 1 - hk;
+}
+/* lens-flare ghosts when the sun sits inside the tube */
+function drawFlare(pal) {
+  const sun = pal.sun; if (!sun || sun.moon) return; const { cx, cy, R } = layout, X = sx(sun.az) + V.az * PARALLAX * V.pp, Y = sy(sun.el), dx = X - cx, dy = Y - cy, d = Math.hypot(dx, dy);
+  if (d > R * 1.3) return; const a = (1 - clamp((d - R * 0.8) / (R * 0.5), 0, 1)) * (1 - layout.hk0);
+  ctx.globalAlpha = a * 0.35; sprite(ctx, 'flare', X - R * 0.5, Y - R * 0.5, R, R);
+  ctx.globalAlpha = a * 0.16; sprite(ctx, 'ring', cx - dx * 0.55 - R * 0.09, cy - dy * 0.55 - R * 0.09, R * 0.18, R * 0.18);
+  ctx.globalAlpha = a * 0.22; sprite(ctx, 'flare', cx - dx * 0.25 - R * 0.05, cy - dy * 0.25 - R * 0.05, R * 0.1, R * 0.1);
+  ctx.globalAlpha = a * 0.12; sprite(ctx, 'ring', cx - dx * 1.15 - R * 0.14, cy - dy * 1.15 - R * 0.14, R * 0.28, R * 0.28);
+}
+/* two faint reflections gliding against the aim, and the eyebox shadow when the aim is pushed far off centre */
+function drawLens(t, swA, swE) {
+  const { cx, cy, R } = layout, ka = 1 - layout.hk0;
+  ctx.globalAlpha = 0.07 * ka; sprite(ctx, 'flare', cx - 0.35 * R - (aim.az + swA * 6) * 1.2 - R * 0.28, cy - 0.3 * R + (aim.el + swE * 6) * 1.2 - R * 0.28, R * 0.56, R * 0.56);
+  ctx.globalAlpha = 0.05 * ka; sprite(ctx, 'flare', cx + 0.25 * R - (aim.az + swA * 6) * 0.6 - R * 0.16, cy + 0.35 * R + (aim.el + swE * 6) * 0.6 - R * 0.16, R * 0.32, R * 0.32);
+  const off = Math.hypot(aim.az / 40, aim.el / (aim.el > 0 ? 32 : 20)), ea = clamp((off - 0.5) / 0.5, 0, 1) * 0.9 * ka;
+  if (ea > 0.01) { ctx.globalAlpha = ea; ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.atan2(-aim.el, aim.az)); ctx.drawImage(eyeShadow, -R, -R, 2 * R, 2 * R); ctx.restore(); }
+  ctx.globalAlpha = 1;
 }
 const RET_LINE = ['#111', '#111', 'rgba(20,20,20,.6)', '#ff3b30'];
 /* LRF range labels under every visible alive target (scope and hip view) */
